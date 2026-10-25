@@ -28,3 +28,16 @@ const guide=boot();assert(guide.elements.get('#rules').open);assert.equal(guide.
 for(let i=1;i<6;i++){guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),i);}
 assert(guide.elements.get('#guideNext').disabled);guide.elements.get('#guideExit').onclick();assert(!guide.elements.get('#rules').open);guide.run("choose('redI');place(1,5)");guide.elements.get('#rulesBtn').onclick();assert.equal(guide.run('guideIndex'),0);assert.equal(guide.elements.get('#guideExit').textContent,'Wróć do gry');guide.elements.get('#guideExit').onclick();assert.equal(guide.run('Object.keys(placements()).length'),1);
 console.log('PASS: startup guide, sequential slides, last-step boundary, start/back labels, board preserved.');
+
+const touch=boot();const board=touch.elements.get('#board');
+touch.elements.get('#grid').getBoundingClientRect=()=>({left:0,top:0,width:800,height:800});
+board.setPointerCapture=()=>{};board.hasPointerCapture=()=>true;board.releasePointerCapture=()=>{};
+const ev=(x,y)=>({pointerType:'touch',pointerId:1,isPrimary:true,clientX:x,clientY:y,preventDefault(){}});
+touch.run("touchMode=true;choose('redI')");
+board.onpointerdown(ev(150,450));board.onpointermove(ev(150,550));board.onpointerup(ev(150,550));
+assert.equal(touch.run('Object.keys(placements()).length'),0);assert.deepEqual(touch.run('hover'),[1,5]);assert(touch.elements.get('#overlay').innerHTML.includes('stroke-dasharray'));
+touch.elements.get('#rotate').onclick();touch.elements.get('#flip').onclick();assert.deepEqual(touch.run('hover'),[1,5]);assert.equal(touch.run('Object.keys(placements()).length'),0);
+touch.run("shape=E.normalize(defs.redI.cells)");board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('Object.keys(placements()).length'),1);
+board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('selected'),'redI');assert(touch.elements.get('#overlay').innerHTML.includes('opacity="0.5"'));
+const before=touch.run('JSON.stringify(placements())');board.onpointerdown(ev(150,550));board.onpointermove(ev(350,350));board.onpointercancel(ev(350,350));assert.equal(touch.run('JSON.stringify(placements())'),before);assert.equal(touch.run('touchGesture'),null);
+console.log('PASS: touch drag previews only, rotate/flip retain preview, tap commits, pickup stays translucent, cancellation preserves board.');

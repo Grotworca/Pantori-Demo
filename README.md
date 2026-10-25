@@ -76,3 +76,7 @@ Dodatkowe testy: `node test-ui.cjs` sprawdza czyszczenie, cofanie, nowy start, p
 ## Przewodnik startowy
 
 Po uruchomieniu pojawia się przewodnik z sześcioma ekranami: cel gry, kontakt klocków, duchy, kolce, diamenty i sterowanie. Przykłady są pokazywane pojedynczo, z opisami na 2-3 zdania we wszystkich sześciu językach. Przyciski Dalej i Wstecz przełączają ekrany. Rozpocznij grę zamyka przewodnik startowy; po otwarciu zasad podczas gry pojawia się Wróć do gry, bez zmiany układu klocków. Język można zmienić również w przewodniku.
+
+## Sterowanie dotykowe
+
+Wybierz klocek i przesuwaj palcem po planszy, aby przesuwać jego kontur. Puszczenie palca nie zatwierdza ruchu. Obrót i odbicie działają w podglądzie; osobne stuknięcie pola zatwierdza pozycję. Stuknięcie ustawionego klocka wybiera go do przeniesienia. Przewijaj stronę poza planszą. Pierwszy GIF samouczka przedstawia aktualną mapę 16 i poprawne rozwiązanie.
