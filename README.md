@@ -79,4 +79,14 @@ Po uruchomieniu pojawia się przewodnik z sześcioma ekranami: cel gry, kontakt 
 
 ## Sterowanie dotykowe
 
-Wybierz klocek i przesuwaj palcem po planszy, aby przesuwać jego kontur. Puszczenie palca nie zatwierdza ruchu. Obrót i odbicie działają w podglądzie; osobne stuknięcie pola zatwierdza pozycję. Stuknięcie ustawionego klocka wybiera go do przeniesienia. Przewijaj stronę poza planszą. Pierwszy GIF samouczka przedstawia aktualną mapę 16 i poprawne rozwiązanie.
+Wybierz klocek i przesuwaj palcem po planszy, aby przesuwać jego kontur. Puszczenie palca nie zatwierdza ruchu. Obrót i odbicie działają w podglądzie; osobne stuknięcie pola zatwierdza pozycję. Stuknięcie ustawionego klocka wybiera go do przeniesienia. Przewijaj stronę poza planszą. Pierwszy GIF samouczka podświetla owoce na aktualnej mapie 16. Nie pokazuje klocków, trasy ani rozwiązania.
+
+## Odświeżony wygląd i precyzyjniejsze sterowanie
+
+Kolorowe litery, pastelowe panele, grube kontury i przyciski przypominające elementy planszówki. Czarne tło i grafiki kart pozostają zachowane. Panel mobilny ma obrót, odbicie, zatwierdzenie, cofanie i czyszczenie pod ręką.
+
+Podpowiedzi oraz opis sterowania w samouczku automatycznie dopasowują się do dotyku lub myszy we wszystkich sześciu językach. Na telefonie nie pokazują skrótów klawiaturowych.
+
+Przesuwanie dotykowe zachowuje punkt chwytu klocka. Kontur przesuwa się płynnie, a delikatny podgląd wskazuje docelowe pola; po puszczeniu dopasowuje się do siatki. Dotknięcie konturu albo przycisku Ustaw zatwierdza pozycję. Dotknięcie innego pola przenosi punkt zaczepienia do tego pola i próbuje ustawić klocek. Niepoprawne pozycje są blokowane. Obrót i odbicie zachowują podgląd w granicach planszy. Odświeżanie ruchu jest zsynchronizowane z klatkami ekranu i nie przebudowuje już warstwy ustawionych klocków.
+
+Weryfikacja: testy sterowania na symulowanej planszy 320 px (punkt chwytu, ruch części pola, zatwierdzanie, granice), pełna walidacja trzech etapów i tłumaczeń, kontrola wyglądu desktop oraz podglądu 390 × 844. Nie przeprowadzono testu na fizycznym telefonie.

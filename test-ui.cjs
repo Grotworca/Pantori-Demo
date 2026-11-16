@@ -1,9 +1,9 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 function boot(){const elements=new Map(),storageCalls=[];
  const element=()=>({innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},append(){},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
- const document={documentElement:{},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
- const context={document,matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
- for(const f of ['levels.js','engine.js','i18n.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+ const document={documentElement:{setAttribute(){}},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
+ const context={document,requestAnimationFrame:fn=>{fn();return 0},matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
+ for(const f of ['levels.js','engine.js','i18n.js','effects.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
  return {run:s=>vm.runInContext(s,context),elements,storageCalls};}
 const app=boot();assert.deepEqual(app.storageCalls,['pantori-demo-v1']);
 app.run("choose('redI');place(1,5)");assert.equal(app.run('Object.keys(placements()).length'),1);
@@ -14,9 +14,9 @@ assert(app.run("levels.every(l=>l.image.endsWith('.png'))"));
 const html=fs.readFileSync('index.html','utf8');assert(html.includes('id="clear"'));for(const id of ['check','hint','reset'])assert(!html.includes(`id="${id}"`));
 console.log('PASS: clear all, undo clear, fresh reopen, legacy save removed, original PNG maps, removed options stay removed.');
 
-app.run("choose('redI');draw()");assert(app.elements.get('#overlay').innerHTML.includes('opacity="0.5"'));
+app.run("choose('redI');draw()");assert(app.elements.get('#placedLayer').innerHTML.includes('opacity="0.5"'));
 for(const lang of ['pl','en','de','fr','es','it']){app.run(`lang='${lang}';languageUI();renderBoardLabels();renderTools();draw()`);assert.equal(app.run('selected'),'redI');assert.equal(app.run('Object.keys(placements()).length'),1);}
-app.run("choose('redI');draw()");assert(!app.elements.get('#overlay').innerHTML.includes('opacity="0.5"'));
+app.run("choose('redI');draw()");assert(!app.elements.get('#placedLayer').innerHTML.includes('opacity="0.5"'));
 console.log('PASS: moving piece opacity, six languages, switching language preserves board and selection.');
 const translated=boot();const dict=translated.run('dictionaries');const expected=Object.keys(dict.pl).sort();for(const [code,d]of Object.entries(dict)){assert.deepEqual(Object.keys(d).sort(),expected);for(const [k,v]of Object.entries(d))assert(v.length>0,code+':'+k);}
 const page=fs.readFileSync('index.html','utf8');for(const match of page.matchAll(/data-i18n="([^"]+)"/g))assert(dict.pl[match[1]],match[1]);
@@ -35,9 +35,44 @@ board.setPointerCapture=()=>{};board.hasPointerCapture=()=>true;board.releasePoi
 const ev=(x,y)=>({pointerType:'touch',pointerId:1,isPrimary:true,clientX:x,clientY:y,preventDefault(){}});
 touch.run("touchMode=true;choose('redI')");
 board.onpointerdown(ev(150,450));board.onpointermove(ev(150,550));board.onpointerup(ev(150,550));
-assert.equal(touch.run('Object.keys(placements()).length'),0);assert.deepEqual(touch.run('hover'),[1,5]);assert(touch.elements.get('#overlay').innerHTML.includes('stroke-dasharray'));
+assert.equal(touch.run('Object.keys(placements()).length'),0);assert.deepEqual(touch.run('hover'),[1,5]);assert(touch.elements.get('#previewLayer').innerHTML.includes('stroke-dasharray'));
 touch.elements.get('#rotate').onclick();touch.elements.get('#flip').onclick();assert.deepEqual(touch.run('hover'),[1,5]);assert.equal(touch.run('Object.keys(placements()).length'),0);
 touch.run("shape=E.normalize(defs.redI.cells)");board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('Object.keys(placements()).length'),1);
-board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('selected'),'redI');assert(touch.elements.get('#overlay').innerHTML.includes('opacity="0.5"'));
+board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('selected'),'redI');assert(touch.elements.get('#placedLayer').innerHTML.includes('opacity="0.5"'));
 const before=touch.run('JSON.stringify(placements())');board.onpointerdown(ev(150,550));board.onpointermove(ev(350,350));board.onpointercancel(ev(350,350));assert.equal(touch.run('JSON.stringify(placements())'),before);assert.equal(touch.run('touchGesture'),null);
 console.log('PASS: touch drag previews only, rotate/flip retain preview, tap commits, pickup stays translucent, cancellation preserves board.');
+
+const precision=boot(),pb=precision.elements.get('#board');
+precision.elements.get('#grid').getBoundingClientRect=()=>({left:10,top:20,width:320,height:320});
+pb.setPointerCapture=()=>{};pb.hasPointerCapture=()=>true;pb.releasePointerCapture=()=>{};
+precision.run("touchMode=true;choose('redI');hover=[1,5];draw()");
+// Grab the middle square: the anchor must not jump to the finger.
+pb.onpointerdown(ev(70,280));assert.deepEqual(precision.run('hover'),[1,5]);
+pb.onpointermove(ev(91,280));assert(Math.abs(precision.run('floating[0]')-1.525)<.001);assert.deepEqual(precision.run('hover'),[2,5]);
+pb.onpointerup(ev(91,280));assert.equal(precision.run('Object.keys(placements()).length'),0);assert.equal(precision.run('floating'),null);
+precision.elements.get('#confirm').onclick();assert.equal(precision.run('placements().redI.x'),2);assert.equal(precision.run('placements().redI.y'),5);
+// Pick up a lower square of an already placed piece without moving it.
+pb.onpointerdown(ev(110,320));pb.onpointerup(ev(110,320));assert.deepEqual(precision.run('hover'),[2,5]);assert.equal(precision.run('selected'),'redI');
+// Rotating near the bottom keeps the preview within the board.
+precision.run("hover=[7,7]");precision.elements.get('#rotate').onclick();assert(precision.run('E.cells(proposed(...hover)).every(c=>c.every(v=>v>=0&&v<8))'));
+// Device wording switches in every supported language, including tutorial.
+for(const code of ['pl','en','de','fr','es','it']){
+ precision.run(`lang='${code}';touchMode=true`);
+ for(const key of ['selectHelp','rotateHelp','guideControls','startMsg'])assert.equal(precision.run(`t('${key}')`),precision.run(`dictionaries[lang]['${key}Touch']`));
+ assert(!/Space|spacja|klawisz|clic droit|Rechtsklick|Leertaste|Espacio|Spazio|right.click|PPM/.test(precision.run("t('guideControls')+' '+t('rotateHelp')")));
+ precision.run('touchMode=false');assert.equal(precision.run("t('rotateHelp')"),precision.run('dictionaries[lang].rotateHelpMouse'));
+}
+console.log('PASS: 320px board, no grip jump, sub-cell preview, snap after release, explicit confirm, edge clamping, six-language device copy.');
+
+const traps=boot();
+traps.run("choose('redI');place(0,3)");
+assert(traps.elements.get('#featureLayer').innerHTML.includes('data-retracted="2,1"'));
+traps.run("choose('redI')");traps.elements.get('#remove').onclick();assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+traps.elements.get('#undo').onclick();assert(traps.elements.get('#featureLayer').innerHTML.includes('spikes-retracted.png'));
+traps.elements.get('#clear').onclick();assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+traps.run("state.index=2;render();choose('yellowI');shape=E.rotate(shape);place(3,3)");assert(traps.elements.get('#featureLayer').innerHTML.includes('data-retracted="2,3"'));
+traps.run("state.index=1;render()");assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+const events=boot();events.run("let hits=[];FX.invalid=()=>hits.push('invalid');FX.placement=()=>hits.push('placed');FX.win=()=>hits.push('win');choose('redI');place(0,0)");assert.equal(events.run('hits.join()'),'invalid');assert.equal(events.run('Object.keys(placements()).length'),0);
+events.run("place(1,5)");assert.equal(events.run('hits.join()'),'invalid,placed');
+events.run("state.boards[level().id]={};for(const id of level().pieces)placements()[id]={id,color:defs[id].color,cells:defs[id].cells,x:0,y:0};checkAutomatically()");assert.equal(events.run('lastMessage.error'),true);assert(events.run('lastMessage.args.errors.length')>0);
+console.log('PASS: retract/restore traps on both maps, remove/undo/clear, invalid-placement FX, valid placement FX and explanatory incomplete-map messages.');
