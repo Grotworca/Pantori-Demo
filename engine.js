@@ -14,6 +14,7 @@ function validPlacement(level,p,others){
  const g=level.ghosts.find(g=>key(g.at)===key(c));
  if(g&&g.color!==p.color)return 'Ducha może zakryć tylko klocek w jego kolorze.';
  }
+ if(others.some(q=>contacts(p,q)>1))return 'Dwa klocki mogą stykać się tylko jednym wspólnym bokiem.';
  // Inspect every segment, including segments of pieces already on the board.
  const all=[...others,p],owner=new Map();
  all.forEach((piece,i)=>cells(piece).forEach(c=>owner.set(key(c),i)));

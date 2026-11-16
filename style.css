@@ -23,3 +23,7 @@
 .board-footer{justify-content:flex-end;padding-block:8px}
 footer{justify-content:center}footer>span:empty{display:none}
 @media(max-width:700px){#feedback{margin:0 7px 10px;padding:9px 10px;font-size:12px}}
+
+.ghost-sprite{transform-origin:50px 55px}.ghost-sprite.awake{animation:ghost-sway 2.8s ease-in-out infinite}.ghost-sprite.caught{animation:none;transform:none}
+@keyframes ghost-sway{0%,100%{transform:translateX(-1.5px) rotate(-3deg)}50%{transform:translateX(1.5px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.ghost-sprite.awake{animation:none}}

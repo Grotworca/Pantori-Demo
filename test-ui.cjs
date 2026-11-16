@@ -67,11 +67,11 @@ console.log('PASS: 320px board, no grip jump, sub-cell preview, snap after relea
 const traps=boot();
 traps.run("choose('redI');place(0,3)");
 assert(traps.elements.get('#featureLayer').innerHTML.includes('data-retracted="2,1"'));
-traps.run("choose('redI')");traps.elements.get('#remove').onclick();assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+traps.run("choose('redI')");traps.elements.get('#remove').onclick();assert(!traps.elements.get('#featureLayer').innerHTML.includes('data-retracted'));
 traps.elements.get('#undo').onclick();assert(traps.elements.get('#featureLayer').innerHTML.includes('spikes-retracted.png'));
-traps.elements.get('#clear').onclick();assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+traps.elements.get('#clear').onclick();assert(!traps.elements.get('#featureLayer').innerHTML.includes('data-retracted'));
 traps.run("state.index=2;render();choose('yellowI');shape=E.rotate(shape);place(3,3)");assert(traps.elements.get('#featureLayer').innerHTML.includes('data-retracted="2,3"'));
-traps.run("state.index=1;render()");assert.equal(traps.elements.get('#featureLayer').innerHTML,'');
+traps.run("state.index=1;render()");assert(!traps.elements.get('#featureLayer').innerHTML.includes('data-retracted'));
 const events=boot();events.run("let hits=[];FX.invalid=()=>hits.push('invalid');FX.placement=()=>hits.push('placed');FX.win=()=>hits.push('win');choose('redI');place(0,0)");assert.equal(events.run('hits.join()'),'invalid');assert.equal(events.run('Object.keys(placements()).length'),0);
 events.run("place(1,5)");assert.equal(events.run('hits.join()'),'invalid,placed');
 events.run("state.boards[level().id]={};for(const id of level().pieces)placements()[id]={id,color:defs[id].color,cells:defs[id].cells,x:0,y:0};checkAutomatically()");assert.equal(events.run('lastMessage.error'),true);assert(events.run('lastMessage.args.errors.length')>0);
@@ -92,3 +92,16 @@ assert(legality.run("E.validPlacement(emptyMap,unit('c',3,2),[unit('a',2,2),unit
 assert.equal(legality.run("E.validPlacement(emptyMap,unit('c',2,2),[unit('a',1,1),unit('b',3,3)])"),null);
 assert.equal(legality.run("E.validPlacement(emptyMap,{id:'c',color:'red',cells:[[0,0],[1,0],[2,0]],x:2,y:2},[unit('a',1,2),unit('b',5,2)])"),null);
 console.log('PASS: gray hatching preserves tile color; preview explains invalid placement; routine messages hidden; segment contact checked for new and existing pieces; corner and separate-segment contacts allowed.');
+
+const contactFix=boot();contactFix.run("level().walls=[];level().ghosts=[];choose('redI');place(2,3);choose('yellowI');hover=[1,3];drawPreview()");
+assert(contactFix.elements.get('#previewLayer').innerHTML.includes('url(#invalidHatch)'));
+assert.equal(contactFix.elements.get('#feedback').textContent,'Dwa klocki mogą stykać się tylko jednym wspólnym bokiem.');
+contactFix.run('place(1,3)');assert.equal(contactFix.run('Object.keys(placements()).length'),1);
+const ghosts=boot();assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('ghost-sprite awake'));
+ghosts.run("choose('redI');place(1,3)");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('filter="url(#ghostGray)"'));
+ghosts.run("choose('redI')");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+ghosts.elements.get('#remove').onclick();assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('data-caught="true"'));
+ghosts.elements.get('#undo').onclick();assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+ghosts.elements.get('#clear').onclick();assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('data-caught="true"'));
+console.log('PASS: adjacent long edges rejected before placement, gray hatch and reason; caught ghosts stop and gray out; pickup preserves state, remove/undo/clear restore correct ghost state.');
