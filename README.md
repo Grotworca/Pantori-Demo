@@ -90,3 +90,15 @@ Podpowiedzi oraz opis sterowania w samouczku automatycznie dopasowują się do d
 Przesuwanie dotykowe zachowuje punkt chwytu klocka. Kontur przesuwa się płynnie, a delikatny podgląd wskazuje docelowe pola; po puszczeniu dopasowuje się do siatki. Dotknięcie konturu albo przycisku Ustaw zatwierdza pozycję. Dotknięcie innego pola przenosi punkt zaczepienia do tego pola i próbuje ustawić klocek. Niepoprawne pozycje są blokowane. Obrót i odbicie zachowują podgląd w granicach planszy. Odświeżanie ruchu jest zsynchronizowane z klatkami ekranu i nie przebudowuje już warstwy ustawionych klocków.
 
 Weryfikacja: testy sterowania na symulowanej planszy 320 px (punkt chwytu, ruch części pola, zatwierdzanie, granice), pełna walidacja trzech etapów i tłumaczeń, kontrola wyglądu desktop oraz podglądu 390 × 844. Nie przeprowadzono testu na fizycznym telefonie.
+
+
+## Poprawka: czarne obramowania poruszających się ikon
+
+Ruchome duchy, owoce i diamenty są teraz wyświetlane z osobnych plików
+PNG z przezroczystym tłem w `assets/sprites/`, zamiast używania filtra
+SVG na fragmencie oryginalnej planszy. Dzięki temu nie przesuwają się
+razem z nimi czarne fragmenty obramowań pól. Mapy i reguły nie zostały
+zmienione. `icon-sprites.js` mapuje współrzędne ikon na ich pliki.
+
+Przy aktualizacji GitHub Pages należy przesłać **cały** katalog projektu,
+w tym nowy katalog `assets/sprites/` i `icon-sprites.js`.

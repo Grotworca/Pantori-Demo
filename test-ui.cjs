@@ -3,7 +3,7 @@ function boot(start=true){const elements=new Map(),storageCalls=[];
  const element=()=>({innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},children:[],append(child){this.children.push(child)},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
  const document={documentElement:{setAttribute(){}},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
  const context={document,requestAnimationFrame:fn=>{fn();return 0},matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
- for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-bounds.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+ for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-sprites.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
  if(start)elements.get('#startLanguages').children[0].onclick();
  return {run:s=>vm.runInContext(s,context),elements,storageCalls};}
 const app=boot();assert.deepEqual(app.storageCalls,['pantori-demo-v1']);

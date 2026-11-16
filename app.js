@@ -24,9 +24,12 @@ function renderTools(){const ps=placements();$('#tray').innerHTML='';for(const i
 function proposed(x,y){const anchor=shape[0];return {id:selected,color:defs[selected].color,cells:shape,x:x-anchor[0],y:y-anchor[1]}}
 function drawFeatures(){const covered=new Set(Object.values(placements()).flatMap(E.cells).map(E.key));$('#featureLayer').innerHTML=level().spikes.filter(s=>covered.has(E.key(s.lever))).map(s=>`<g data-retracted="${E.key(s.at)}"><rect x="${s.at[0]*100+2}" y="${s.at[1]*100+3}" width="96" height="94" rx="5" fill="white"/><image href="assets/spikes-retracted.png" x="${s.at[0]*100+5}" y="${s.at[1]*100+8}" width="90" height="84" preserveAspectRatio="none"/></g>`).join('');}
 function iconArt(at,kind,active,i){
- const box=PANTORI_ICON_BOUNDS[level().id+':'+E.key(at)];
+ // Animated artwork is an independent transparent PNG. Sampling the original
+ // board image inside an SVG accidentally picked up black tile borders, which
+ // then moved along with ghosts, fruit and diamonds.
+ const sprite=PANTORI_ICON_SPRITES[level().id+':'+E.key(at)];
  const cls=kind==='ghost'?(active?'caught':'awake'):kind==='fruit'?(active?'collected':'bouncing'):(active?'collected':'sparkling');
- return `<g transform="translate(${at[0]*100} ${at[1]*100})" data-${kind}="${E.key(at)}" data-${kind==='ghost'?'caught':'collected'}="${active}"><g ${active&&kind!=='fruit'?'filter="url(#ghostGray)"':''}><g class="${kind}-sprite ${cls}" style="animation-delay:-${i*.37}s"><svg x="15" y="15" width="70" height="70" viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href="${level().image}" x="0" y="0" width="800" height="800" preserveAspectRatio="none" filter="url(#ghostCutout)"/></svg>${kind==='diamond'&&!active?'<path class="diamond-glint" d="M72 19v14M65 26h14" stroke="white" stroke-width="3"/>':''}</g></g></g>`;
+ return `<g transform="translate(${at[0]*100} ${at[1]*100})" data-${kind}="${E.key(at)}" data-${kind==='ghost'?'caught':'collected'}="${active}"><g ${active&&kind!=='fruit'?'filter="url(#ghostGray)"':''}><g class="${kind}-sprite ${cls}" style="animation-delay:-${i*.37}s"><image href="${sprite}" x="15" y="15" width="70" height="70" preserveAspectRatio="xMidYMid meet"/>${kind==='diamond'&&!active?'<path class="diamond-glint" d="M72 19v14M65 26h14" stroke="white" stroke-width="3"/>':''}</g></g></g>`;
 }
 function drawFruits(){const covered=new Set(Object.values(placements()).flatMap(E.cells).map(E.key));$('#fruitLayer').innerHTML=level().fruits.map((at,i)=>iconArt(at,'fruit',covered.has(E.key(at)),i)).join('');$('#diamondLayer').innerHTML=level().diamonds.map((at,i)=>iconArt(at,'diamond',covered.has(E.key(at)),i)).join('');}
 function drawLevers(){
