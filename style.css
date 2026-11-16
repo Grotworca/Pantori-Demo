@@ -31,3 +31,10 @@ footer{justify-content:center}footer>span:empty{display:none}
 .fruit-sprite{transform-origin:50px 90px}.fruit-sprite.bouncing{animation:fruit-bounce 2.4s infinite}.fruit-sprite.collected{animation:none;transform:none}
 @keyframes fruit-bounce{0%,12%,100%{transform:translateY(0);animation-timing-function:ease-out}48%{transform:translateY(-4px);animation-timing-function:ease-in}84%{transform:translateY(0);animation-timing-function:ease-out}90%{transform:translateY(0) scale(1.025,.975)}}
 @media(prefers-reduced-motion:reduce){.fruit-sprite.bouncing{animation:none}}
+
+#board,#grid,.cell{touch-action:pan-y pinch-zoom}#board.piece-selected,#board.piece-selected #grid,#board.piece-selected .cell{touch-action:none}
+.diamond-sprite.sparkling{animation:diamond-shine 2.7s ease-in-out infinite}.diamond-glint{animation:diamond-glint 2.7s ease-in-out infinite;transform-origin:72px 26px}.diamond-sprite.collected{animation:none}
+@keyframes diamond-shine{0%,100%{opacity:1}50%{opacity:.65}}
+@keyframes diamond-glint{0%,100%{opacity:0;transform:scale(.3)}45%,60%{opacity:1;transform:scale(1)}}
+#languageStart{max-width:450px}#startLanguages{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}#startLanguages button{display:flex;align-items:center;gap:12px;min-height:58px}#startLanguages img{width:32px;height:23px;object-fit:cover}
+@media(prefers-reduced-motion:reduce){.diamond-sprite.sparkling,.diamond-glint{animation:none}}
