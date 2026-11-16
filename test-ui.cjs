@@ -105,3 +105,13 @@ ghosts.elements.get('#remove').onclick();assert(!ghosts.elements.get('#ghostLaye
 ghosts.elements.get('#undo').onclick();assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
 ghosts.elements.get('#clear').onclick();assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('data-caught="true"'));
 console.log('PASS: adjacent long edges rejected before placement, gray hatch and reason; caught ghosts stop and gray out; pickup preserves state, remove/undo/clear restore correct ghost state.');
+
+const fruitMotion=boot();assert(fruitMotion.elements.get('#fruitLayer').innerHTML.includes('fruit-sprite bouncing'));
+fruitMotion.run("choose('redI');place(1,4)");assert(fruitMotion.elements.get('#fruitLayer').innerHTML.includes('data-fruit="1,6" data-collected="true"'));
+assert(fruitMotion.elements.get('#placedLayer').innerHTML.includes('fill-opacity="0.6384"'));
+fruitMotion.elements.get('#undo').onclick();assert(!fruitMotion.elements.get('#fruitLayer').innerHTML.includes('data-collected="true"'));
+fruitMotion.run("choose('redI');place(0,3)");assert(fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active="0,4"'));assert(fruitMotion.elements.get('#featureLayer').innerHTML.includes('assets/lever-left.png'));
+fruitMotion.run("choose('redI')");fruitMotion.elements.get('#remove').onclick();assert(!fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
+fruitMotion.elements.get('#undo').onclick();assert(fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
+fruitMotion.elements.get('#clear').onclick();assert(!fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
+console.log('PASS: fruit motion stops on collection and resumes after undo; active lever artwork follows placement/remove/undo/clear; placed tile fill opacity increased by 33%.');

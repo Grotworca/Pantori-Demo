@@ -27,3 +27,7 @@ footer{justify-content:center}footer>span:empty{display:none}
 .ghost-sprite{transform-origin:50px 55px}.ghost-sprite.awake{animation:ghost-sway 2.8s ease-in-out infinite}.ghost-sprite.caught{animation:none;transform:none}
 @keyframes ghost-sway{0%,100%{transform:translateX(-1.5px) rotate(-3deg)}50%{transform:translateX(1.5px) rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.ghost-sprite.awake{animation:none}}
+
+.fruit-sprite{transform-origin:50px 90px}.fruit-sprite.bouncing{animation:fruit-bounce 2.4s infinite}.fruit-sprite.collected{animation:none;transform:none}
+@keyframes fruit-bounce{0%,12%,100%{transform:translateY(0);animation-timing-function:ease-out}48%{transform:translateY(-4px);animation-timing-function:ease-in}84%{transform:translateY(0);animation-timing-function:ease-out}90%{transform:translateY(0) scale(1.025,.975)}}
+@media(prefers-reduced-motion:reduce){.fruit-sprite.bouncing{animation:none}}
