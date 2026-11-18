@@ -101,11 +101,59 @@ contactFix.run('place(1,3)');assert.equal(contactFix.run('Object.keys(placements
 const ghosts=boot();assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('ghost-sprite awake'));
 ghosts.run("choose('redI');place(1,3)");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
 assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('filter="url(#ghostGray)"'));
+ghosts.run("choose('redI')");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
+assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('filter="url(#ghostGray)"'));
+assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('ghost-sprite awake'));
+// Cancelling a pickup brings back the tile and its original ghost coverage.
 ghosts.run("choose('redI')");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+ghosts.run("choose('redI')");assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
 ghosts.elements.get('#remove').onclick();assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('data-caught="true"'));
 ghosts.elements.get('#undo').onclick();assert(ghosts.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
 ghosts.elements.get('#clear').onclick();assert(!ghosts.elements.get('#ghostLayer').innerHTML.includes('data-caught="true"'));
-console.log('PASS: adjacent long edges rejected before placement, gray hatch and reason; caught ghosts stop and gray out; pickup preserves state, remove/undo/clear restore correct ghost state.');
+console.log('PASS: captured ghost gray, picking piece up restores color, cancelling returns gray, remove/undo/clear all refresh ghosts.');
+
+// Regression: moving the tile must not leave behind a gray ghost or a stale fruit/lever.
+const moveGhost=boot();
+moveGhost.run("choose('redI');place(1,3);choose('redI')");
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
+moveGhost.run('place(1,4)');
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
+moveGhost.elements.get('#undo').onclick();
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+moveGhost.run("choose('redI');choose('yellowI')");
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+moveGhost.run("choose('redI')");
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
+moveGhost.run("choose('redI')");
+assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+// Multiple cycles reproduce the intermittent problem (including changes of selected piece).
+for(let i=0;i<25;i++){
+ moveGhost.run("choose('redI')");
+ assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="false"'));
+ moveGhost.run("choose('redI')");
+ assert(moveGhost.elements.get('#ghostLayer').innerHTML.includes('data-ghost="1,3" data-caught="true"'));
+}
+// Direct placement fixtures cover all board variants and ghost colors.
+const ghostMaps=boot();
+for(let stage=0;stage<3;stage++){
+ ghostMaps.run(`state.index=${stage};render()`);
+ const ghostList=ghostMaps.run('level().ghosts.map(g=>({at:g.at,color:g.color}))');
+ for(const g of ghostList){
+  const id=ghostMaps.run(`level().pieces.find(id=>defs[id].color==='${g.color}')`);
+  const placement={id,color:g.color,cells:[[0,0]],x:g.at[0],y:g.at[1]};
+  ghostMaps.run(`state.boards[level().id]={${JSON.stringify(id)}:${JSON.stringify(placement)}};draw()`);
+  const which=`data-ghost="${g.at.join(',')}" data-caught="`;
+  assert(ghostMaps.elements.get('#ghostLayer').innerHTML.includes(which+'true"'),`${stage}: ${g.at} was not caught`);
+  ghostMaps.run(`choose(${JSON.stringify(id)})`);
+  assert(ghostMaps.elements.get('#ghostLayer').innerHTML.includes(which+'false"'),`${stage}: ${g.at} stayed gray after pickup`);
+  ghostMaps.run(`choose(${JSON.stringify(id)})`);
+  assert(ghostMaps.elements.get('#ghostLayer').innerHTML.includes(which+'true"'),`${stage}: ${g.at} not gray after cancelled pickup`);
+  ghostMaps.run(`choose(${JSON.stringify(id)})`);
+  ghostMaps.elements.get('#remove').onclick();
+  assert(ghostMaps.elements.get('#ghostLayer').innerHTML.includes(which+'false"'),`${stage}: ${g.at} stayed gray after removal`);
+ }
+}
+console.log('PASS: 25 repeated ghost pickups and return; moving, undo, switching selection; each ghost on all 3 boards uncovers and recolors.');
 
 const fruitMotion=boot();assert(fruitMotion.elements.get('#fruitLayer').innerHTML.includes('fruit-sprite bouncing'));
 fruitMotion.run("choose('redI');place(1,4)");assert(fruitMotion.elements.get('#fruitLayer').innerHTML.includes('data-fruit="1,6" data-collected="true"'));
@@ -116,6 +164,30 @@ fruitMotion.run("choose('redI')");fruitMotion.elements.get('#remove').onclick();
 fruitMotion.elements.get('#undo').onclick();assert(fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
 fruitMotion.elements.get('#clear').onclick();assert(!fruitMotion.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
 console.log('PASS: fruit motion stops on collection and resumes after undo; active lever artwork follows placement/remove/undo/clear; placed tile fill opacity increased by 33%.');
+
+// Visual coverage always follows only pieces physically displayed on the board.
+const pickupFeatures=boot();
+pickupFeatures.run("choose('redI');place(1,4)");
+assert(pickupFeatures.elements.get('#fruitLayer').innerHTML.includes('data-fruit="1,6" data-collected="true"'));
+pickupFeatures.run("choose('redI')");
+assert(pickupFeatures.elements.get('#fruitLayer').innerHTML.includes('data-fruit="1,6" data-collected="false"'));
+assert(pickupFeatures.elements.get('#fruitLayer').innerHTML.includes('fruit-sprite bouncing'));
+assert(pickupFeatures.elements.get('#fruitCount').textContent.includes('0'));
+pickupFeatures.run("choose('redI')");
+assert(pickupFeatures.elements.get('#fruitLayer').innerHTML.includes('data-fruit="1,6" data-collected="true"'));
+pickupFeatures.run("state.boards[level().id]={};choose('redI');place(0,3)");
+assert(pickupFeatures.elements.get('#featureLayer').innerHTML.includes('data-lever-active="0,4"'));
+pickupFeatures.run("choose('redI')");
+assert(!pickupFeatures.elements.get('#featureLayer').innerHTML.includes('data-lever-active'));
+assert(!pickupFeatures.elements.get('#featureLayer').innerHTML.includes('data-retracted'));
+pickupFeatures.run("choose('redI')");
+assert(pickupFeatures.elements.get('#featureLayer').innerHTML.includes('data-lever-active="0,4"'));
+pickupFeatures.run("state.index=1;render();state.boards[level().id]={blueL:{id:'blueL',color:'blue',cells:[[0,0]],x:6,y:2}};draw()");
+assert(pickupFeatures.elements.get('#diamondLayer').innerHTML.includes('data-diamond="6,2" data-collected="true"'));
+pickupFeatures.run("choose('blueL')");
+assert(pickupFeatures.elements.get('#diamondLayer').innerHTML.includes('data-diamond="6,2" data-collected="false"'));
+assert(!pickupFeatures.elements.get('#diamondLayer').innerHTML.includes('filter="url(#ghostGray)"'));
+console.log('PASS: lifting a piece immediately restores fruit, diamond, lever, spikes and count; cancelling pickup restores them.');
 
 const intro=boot(false);assert(intro.elements.get('#languageStart').open);assert(!intro.elements.get('#rules').open);assert.equal(intro.elements.get('#startLanguages').children.length,6);intro.elements.get('#startLanguages').children[1].onclick();assert.equal(intro.run('lang'),'en');assert(!intro.elements.get('#languageStart').open);assert(intro.elements.get('#rules').open);intro.run('state.index=1;render()');assert(!intro.elements.get('#languageStart').open);
 const scrolling=boot();scrolling.run('touchMode=true');scrolling.elements.get('#board').onpointerdown({pointerType:'touch',isPrimary:true,preventDefault(){throw Error('Scroll blocked')}});assert.equal(scrolling.run('touchGesture'),null);

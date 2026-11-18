@@ -20,9 +20,13 @@ function tell(key,args={},error=false){lastMessage={key,args,error};const text=e
 function previewFeedback(error){if(error)showFeedback(translateError(error),true);else if(selected)showFeedback('');else showFeedback(lastMessage.error?(lastMessage.key==='errors'?lastMessage.args.errors.map(translateError).join(' '):t(lastMessage.key,lastMessage.args)):'',lastMessage.error);}
 function tileSvg(c,color,anchor=false){const maxX=Math.max(...c.map(p=>p[0]))+1,maxY=Math.max(...c.map(p=>p[1]))+1;return `<svg viewBox="-3 -3 ${maxX*20+6} ${maxY*20+6}" aria-hidden="true">${c.map(([x,y],i)=>`<rect x="${x*20+1}" y="${y*20+1}" width="18" height="18" rx="3" fill="${palette[color]}" stroke="#172d2950"/>${i===0&&anchor?`<circle cx="${x*20+10}" cy="${y*20+10}" r="3" fill="#fff" stroke="#172d29" stroke-width="1"/>`:''}`).join('')}</svg>`}
 function choose(id){floating=null;if(selected===id){selected=null;shape=null;hover=null}else{selected=id;const p=placements()[id];shape=E.normalize(p?.cells||defs[id].cells);hover=touchMode?(p?[p.x+shape[0][0],p.y+shape[0][1]]:[3,3]):null;if(hover)hover=clampAnchor(hover)}renderTools();draw();}
-function renderTools(){const ps=placements();$('#tray').innerHTML='';for(const id of level().pieces){const b=document.createElement('button');b.className='piece-button'+(selected===id?' active':'')+(ps[id]?' placed':'');b.setAttribute('aria-label',t(id)+(ps[id]?' - '+t('onBoard'):''));b.setAttribute('aria-pressed',String(selected===id));b.innerHTML=tileSvg(selected===id?shape:ps[id]?.cells||E.normalize(defs[id].cells),defs[id].color,selected===id);b.onpointerdown=e=>{setInputMode(e.pointerType==='touch'||e.pointerType==='pen')};b.onclick=()=>choose(id);$('#tray').append(b)}$('#selectedLabel').textContent=selected?t('anchor',{piece:t(selected)}):t('choose');$('#rotate').disabled=$('#flip').disabled=!selected;$('#confirm').disabled=!selected||!hover;$('#remove').disabled=!selected;$('#undo').disabled=!history.length;$('#piecesCount').textContent=t('pieceCount',{n:Object.keys(ps).length,total:level().pieces.length});$('#fruitCount').textContent=t('fruitCount',{n:E.check(level(),ps).fruit,total:level().fruits.length});}
+function renderTools(){const ps=placements(),onBoard=visiblePlacements();$('#tray').innerHTML='';for(const id of level().pieces){const b=document.createElement('button');b.className='piece-button'+(selected===id?' active':'')+(ps[id]&&id!==selected?' placed':'');b.setAttribute('aria-label',t(id)+(ps[id]&&id!==selected?' - '+t('onBoard'):''));b.setAttribute('aria-pressed',String(selected===id));b.innerHTML=tileSvg(selected===id?shape:ps[id]?.cells||E.normalize(defs[id].cells),defs[id].color,selected===id);b.onpointerdown=e=>{setInputMode(e.pointerType==='touch'||e.pointerType==='pen')};b.onclick=()=>choose(id);$('#tray').append(b)}$('#selectedLabel').textContent=selected?t('anchor',{piece:t(selected)}):t('choose');$('#rotate').disabled=$('#flip').disabled=!selected;$('#confirm').disabled=!selected||!hover;$('#remove').disabled=!selected;$('#undo').disabled=!history.length;$('#piecesCount').textContent=t('pieceCount',{n:onBoard.length,total:level().pieces.length});$('#fruitCount').textContent=t('fruitCount',{n:level().fruits.filter(at=>coveredCells(onBoard).has(E.key(at))).length,total:level().fruits.length});}
 function proposed(x,y){const anchor=shape[0];return {id:selected,color:defs[selected].color,cells:shape,x:x-anchor[0],y:y-anchor[1]}}
-function drawFeatures(){const covered=new Set(Object.values(placements()).flatMap(E.cells).map(E.key));$('#featureLayer').innerHTML=level().spikes.filter(s=>covered.has(E.key(s.lever))).map(s=>`<g data-retracted="${E.key(s.at)}"><rect x="${s.at[0]*100+2}" y="${s.at[1]*100+3}" width="96" height="94" rx="5" fill="white"/><image href="assets/spikes-retracted.png" x="${s.at[0]*100+5}" y="${s.at[1]*100+8}" width="90" height="84" preserveAspectRatio="none"/></g>`).join('');}
+// A picked-up piece stays in placements() so cancelling the move restores it,
+// but it must not affect any artwork or counters while absent from the board.
+function visiblePlacements(){return Object.values(placements()).filter(p=>p.id!==selected);}
+function coveredCells(ps){return new Set(ps.flatMap(E.cells).map(E.key));}
+function drawFeatures(covered){$('#featureLayer').innerHTML=level().spikes.filter(s=>covered.has(E.key(s.lever))).map(s=>`<g data-retracted="${E.key(s.at)}"><rect x="${s.at[0]*100+2}" y="${s.at[1]*100+3}" width="96" height="94" rx="5" fill="white"/><image href="assets/spikes-retracted.png" x="${s.at[0]*100+5}" y="${s.at[1]*100+8}" width="90" height="84" preserveAspectRatio="none"/></g>`).join('');}
 function iconArt(at,kind,active,i){
  // Animated artwork is an independent transparent PNG. Sampling the original
  // board image inside an SVG accidentally picked up black tile borders, which
@@ -31,14 +35,24 @@ function iconArt(at,kind,active,i){
  const cls=kind==='ghost'?(active?'caught':'awake'):kind==='fruit'?(active?'collected':'bouncing'):(active?'collected':'sparkling');
  return `<g transform="translate(${at[0]*100} ${at[1]*100})" data-${kind}="${E.key(at)}" data-${kind==='ghost'?'caught':'collected'}="${active}"><g ${active&&kind!=='fruit'?'filter="url(#ghostGray)"':''}><g class="${kind}-sprite ${cls}" style="animation-delay:-${i*.37}s"><image href="${sprite}" x="15" y="15" width="70" height="70" preserveAspectRatio="xMidYMid meet"/>${kind==='diamond'&&!active?'<path class="diamond-glint" d="M72 19v14M65 26h14" stroke="white" stroke-width="3"/>':''}</g></g></g>`;
 }
-function drawFruits(){const covered=new Set(Object.values(placements()).flatMap(E.cells).map(E.key));$('#fruitLayer').innerHTML=level().fruits.map((at,i)=>iconArt(at,'fruit',covered.has(E.key(at)),i)).join('');$('#diamondLayer').innerHTML=level().diamonds.map((at,i)=>iconArt(at,'diamond',covered.has(E.key(at)),i)).join('');}
-function drawLevers(){
- const covered=new Set(Object.values(placements()).flatMap(E.cells).map(E.key));
+function drawFruits(covered){$('#fruitLayer').innerHTML=level().fruits.map((at,i)=>iconArt(at,'fruit',covered.has(E.key(at)),i)).join('');$('#diamondLayer').innerHTML=level().diamonds.map((at,i)=>iconArt(at,'diamond',covered.has(E.key(at)),i)).join('');}
+function drawLevers(covered){
  const levers=[...new Map(level().spikes.map(s=>[E.key(s.lever),s.lever])).values()];
  $('#featureLayer').innerHTML+=levers.filter(at=>covered.has(E.key(at))).map(([x,y])=>`<g data-lever-active="${x},${y}"><rect x="${x*100+3}" y="${y*100+3}" width="94" height="94" rx="5" fill="white"/><image href="assets/lever-left.png" x="${x*100+7}" y="${y*100+5}" width="86" height="90" preserveAspectRatio="xMidYMid meet"/></g>`).join('');
 }
-function drawGhosts(){const ps=Object.values(placements());$('#ghostLayer').innerHTML=level().ghosts.map((g,i)=>iconArt(g.at,'ghost',ps.some(p=>p.color===g.color&&E.cells(p).some(c=>E.key(c)===E.key(g.at))),i)).join('');}
-function draw(){$('#board').classList.toggle('piece-selected',!!selected);drawFeatures();$('#featureLayer').innerHTML+=level().ghosts.map(g=>`<rect x="${g.at[0]*100+3}" y="${g.at[1]*100+3}" width="94" height="94" rx="5" fill="white"/>`).join('');drawLevers();$('#featureLayer').innerHTML+=[...level().fruits,...level().diamonds].map(([x,y])=>`<rect x="${x*100+3}" y="${y*100+3}" width="94" height="94" rx="5" fill="white"/>`).join('');drawFruits();drawGhosts();let svg='';for(const p of Object.values(placements()).filter(p=>p.id!==selected))svg+=`<g opacity="1" data-piece="${p.id}">${pieceOverlay(p,false)}</g>`;$('#placedLayer').innerHTML=svg;drawPreview();}
+function drawGhosts(ps){$('#ghostLayer').innerHTML=level().ghosts.map((g,i)=>iconArt(g.at,'ghost',ps.some(p=>p.color===g.color&&E.cells(p).some(c=>E.key(c)===E.key(g.at))),i)).join('');}
+function draw(){
+ const ps=visiblePlacements(),covered=coveredCells(ps);
+ $('#board').classList.toggle('piece-selected',!!selected);
+ drawFeatures(covered);
+ $('#featureLayer').innerHTML+=level().ghosts.map(g=>`<rect x="${g.at[0]*100+3}" y="${g.at[1]*100+3}" width="94" height="94" rx="5" fill="white"/>`).join('');
+ drawLevers(covered);
+ $('#featureLayer').innerHTML+=[...level().fruits,...level().diamonds].map(([x,y])=>`<rect x="${x*100+3}" y="${y*100+3}" width="94" height="94" rx="5" fill="white"/>`).join('');
+ drawFruits(covered);
+ drawGhosts(ps);
+ $('#placedLayer').innerHTML=ps.map(p=>`<g opacity="1" data-piece="${p.id}">${pieceOverlay(p,false)}</g>`).join('');
+ drawPreview();
+}
 function drawPreview(){let svg='';if(selected&&hover){const p=proposed(...hover);const bad=E.validPlacement(level(),p,Object.values(placements()).filter(q=>q.id!==selected));previewFeedback(bad);
  if(floating){svg+=`<g opacity=".35">${pieceOverlay(p,true)}</g><g transform="translate(${(floating[0]-hover[0])*100} ${(floating[1]-hover[1])*100})">${pieceOverlay(p,true)}</g>`;}else svg+=pieceOverlay(p,true);
  svg+=`<circle cx="${hover[0]*100+50}" cy="${hover[1]*100+50}" r="12" fill="${bad?'#85858d':'#fff'}" stroke="#212037" stroke-width="4"/>`;
