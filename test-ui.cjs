@@ -26,7 +26,7 @@ for(let i=0;i<3;i++){translated.run(`state.index=${i};render();lang='fr';for(con
 console.log('PASS: every translation key complete; all three levels auto-complete with translated victory messages.');
 
 const guide=boot();assert(guide.elements.get('#rules').open);assert.equal(guide.elements.get('#guideExit').textContent,'Rozpocznij grę');
-for(let i=1;i<6;i++){guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),i);}
+for(let i=1;i<7;i++){guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),i);}
 assert(guide.elements.get('#guideNext').disabled);guide.elements.get('#guideExit').onclick();assert(!guide.elements.get('#rules').open);guide.run("choose('redI');place(1,5)");guide.elements.get('#rulesBtn').onclick();assert.equal(guide.run('guideIndex'),0);assert.equal(guide.elements.get('#guideExit').textContent,'Wróć do gry');guide.elements.get('#guideExit').onclick();assert.equal(guide.run('Object.keys(placements()).length'),1);
 console.log('PASS: startup guide, sequential slides, last-step boundary, start/back labels, board preserved.');
 
@@ -123,3 +123,6 @@ scrolling.run('state.index=1;render()');assert(scrolling.elements.get('#diamondL
 console.log('PASS: language picker precedes tutorial, does not reopen on next map; unselected map permits scrolling; collected diamond becomes gray.');
 
 const centering=boot();centering.run('touchMode=true;window.innerHeight=800;window.scrollY=0;window.scrollTo=o=>window.lastScroll=o');centering.elements.get('#board').getBoundingClientRect=()=>({top:200,height:320});centering.elements.set('.tool-panel',{getBoundingClientRect:()=>({top:560})});centering.elements.get('#guideExit').onclick();assert.equal(centering.run('window.lastScroll.top'),80);console.log('PASS: mobile map centers above fixed controls after tutorial.');
+
+const discard=boot();discard.run("choose('redI');place(1,5)");const saved=discard.run('JSON.stringify(placements())'),undoCount=discard.run('history.length');discard.run("touchMode=true;choose('yellowI');hover=[3,3];floating=[3.2,3];draw()");assert.equal(discard.elements.get('#remove').disabled,false);discard.elements.get('#remove').onclick();assert.equal(discard.run('JSON.stringify(placements())'),saved);assert.equal(discard.run('history.length'),undoCount);for(const name of ['selected','shape','hover','floating','touchGesture'])assert.equal(discard.run(name),null);assert.equal(discard.elements.get('#previewLayer').innerHTML,'');assert(discard.elements.get('#remove').disabled);discard.elements.get('#undo').onclick();assert.equal(discard.run('Object.keys(placements()).length'),0);
+const edgeGuide=boot();edgeGuide.elements.get('#guideNext').onclick();assert.equal(edgeGuide.elements.get('#guideImage').src,'assets/rules-edge.gif');assert(edgeGuide.elements.get('#guideDescription').textContent.includes('krawędzią'));edgeGuide.elements.get('#animationToggle').onclick();assert.equal(edgeGuide.elements.get('#guideImage').src,'assets/rules-edge.png');console.log('PASS: discard unplaced tile clears hand without changing board or undo history; edge tutorial GIF and paused image.');

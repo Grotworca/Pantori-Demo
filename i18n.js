@@ -13,3 +13,10 @@ PANTORI_I18N.es.errSegmentContact="Una casilla de una pieza no puede tocar por s
 PANTORI_I18N.es.guideContact+=" "+PANTORI_I18N.es.errSegmentContact;
 PANTORI_I18N.it.errSegmentContact="Una casella di una tessera non può toccare con i suoi lati più di un’altra tessera.";
 PANTORI_I18N.it.guideContact+=" "+PANTORI_I18N.it.errSegmentContact;
+
+Object.assign(PANTORI_I18N.pl,{"guideEdgeTitle": "Wejście do lochu", "guideEdge": "Układasz trasę wędrówki po lochu. Co najmniej jeden klocek musi stykać się bokiem z krawędzią mapy. Na przykładzie niebieski klocek dochodzi do lewej krawędzi, zapewniając wejście na trasę."});
+Object.assign(PANTORI_I18N.en,{"guideEdgeTitle": "Entering the dungeon", "guideEdge": "You are building a route through the dungeon. At least one tile must share an edge with the map boundary. In this example, the blue tile reaches the left boundary, providing an entrance to the route."});
+Object.assign(PANTORI_I18N.de,{"guideEdgeTitle": "Der Eingang zum Verlies", "guideEdge": "Du legst einen Weg durch das Verlies. Mindestens ein Spielstein muss mit einer Seite an den Kartenrand angrenzen. Im Beispiel reicht der blaue Spielstein bis zum linken Rand und bildet so den Eingang zum Weg."});
+Object.assign(PANTORI_I18N.fr,{"guideEdgeTitle": "Entrer dans le donjon", "guideEdge": "Vous construisez un itinéraire à travers le donjon. Au moins une pièce doit toucher le bord de la carte par un côté. Dans cet exemple, la pièce bleue atteint le bord gauche et constitue une entrée sur le parcours."});
+Object.assign(PANTORI_I18N.es,{"guideEdgeTitle": "La entrada a la mazmorra", "guideEdge": "Construyes una ruta por la mazmorra. Al menos una pieza debe tocar el borde del mapa por uno de sus lados. En este ejemplo, la pieza azul llega al borde izquierdo y proporciona una entrada a la ruta."});
+Object.assign(PANTORI_I18N.it,{"guideEdgeTitle": "Entrare nel dungeon", "guideEdge": "Stai costruendo un percorso attraverso il dungeon. Almeno un pezzo deve toccare il bordo della mappa con uno dei suoi lati. In questo esempio, il pezzo blu raggiunge il bordo sinistro e crea un ingresso al percorso."});
