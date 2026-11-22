@@ -1,9 +1,9 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 function boot(start=true){const elements=new Map(),storageCalls=[];
- const element=()=>({innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},children:[],append(child){this.children.push(child)},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
+ const element=()=>({dataset:{},getBoundingClientRect:()=>({left:0,top:0,width:800,height:800}),setPointerCapture(){},releasePointerCapture(){},hasPointerCapture(){return true},innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},children:[],append(child){this.children.push(child)},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
  const document={documentElement:{setAttribute(){}},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
  const context={document,requestAnimationFrame:fn=>{fn();return 0},matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
- for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-sprites.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+ for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-sprites.js','interaction-i18n.js','piece-drag.js','tutorial.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
  if(start)elements.get('#startLanguages').children[0].onclick();
  return {run:s=>vm.runInContext(s,context),elements,storageCalls};}
 const app=boot();assert.deepEqual(app.storageCalls,['pantori-demo-v1']);
@@ -25,45 +25,56 @@ translated.run(fs.readFileSync('solutions.js','utf8'));
 for(let i=0;i<3;i++){translated.run(`state.index=${i};render();lang='fr';for(const p of Object.values(PANTORI_SOLUTIONS[level().id])){choose(p.id);shape=p.cells;place(p.x+shape[0][0],p.y+shape[0][1]);}`);assert.equal(translated.elements.get('#win').open,true);assert(translated.run('state.complete.includes(level().id)'));translated.elements.get('#win').close();}
 console.log('PASS: every translation key complete; all three levels auto-complete with translated victory messages.');
 
-const guide=boot();assert(guide.elements.get('#rules').open);assert.equal(guide.elements.get('#guideExit').textContent,'Rozpocznij grę');
-for(let i=1;i<7;i++){guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),i);}
-assert(guide.elements.get('#guideNext').disabled);guide.elements.get('#guideExit').onclick();assert(!guide.elements.get('#rules').open);guide.run("choose('redI');place(1,5)");guide.elements.get('#rulesBtn').onclick();assert.equal(guide.run('guideIndex'),0);assert.equal(guide.elements.get('#guideExit').textContent,'Wróć do gry');guide.elements.get('#guideExit').onclick();assert.equal(guide.run('Object.keys(placements()).length'),1);
-console.log('PASS: startup guide, sequential slides, last-step boundary, start/back labels, board preserved.');
-
-const touch=boot();const board=touch.elements.get('#board');
-touch.elements.get('#grid').getBoundingClientRect=()=>({left:0,top:0,width:800,height:800});
-board.setPointerCapture=()=>{};board.hasPointerCapture=()=>true;board.releasePointerCapture=()=>{};
-const ev=(x,y)=>({pointerType:'touch',pointerId:1,isPrimary:true,clientX:x,clientY:y,preventDefault(){}});
-touch.run("touchMode=true;choose('redI')");
-board.onpointerdown(ev(150,450));board.onpointermove(ev(150,550));board.onpointerup(ev(150,550));
-assert.equal(touch.run('Object.keys(placements()).length'),0);assert.deepEqual(touch.run('hover'),[1,5]);assert(touch.elements.get('#previewLayer').innerHTML.includes('stroke-dasharray'));
-touch.elements.get('#rotate').onclick();touch.elements.get('#flip').onclick();assert.deepEqual(touch.run('hover'),[1,5]);assert.equal(touch.run('Object.keys(placements()).length'),0);
-touch.run("shape=E.normalize(defs.redI.cells)");board.onpointerdown(ev(150,550));board.onpointerup(ev(150,550));assert.equal(touch.run('Object.keys(placements()).length'),1);
-touch.run('suppressClickUntil=0');touch.elements.get('#grid').children[41].onclick({pointerType:'touch',detail:1});assert.equal(touch.run('selected'),'redI');assert(!touch.elements.get('#placedLayer').innerHTML.includes('data-piece="redI"'));
-const before=touch.run('JSON.stringify(placements())');board.onpointerdown(ev(150,550));board.onpointermove(ev(350,350));board.onpointercancel(ev(350,350));assert.equal(touch.run('JSON.stringify(placements())'),before);assert.equal(touch.run('touchGesture'),null);
-console.log('PASS: touch drag previews only, rotate/flip retain preview, tap commits, pickup hides previous shape, cancellation preserves board.');
-
-const precision=boot(),pb=precision.elements.get('#board');
-precision.elements.get('#grid').getBoundingClientRect=()=>({left:10,top:20,width:320,height:320});
-pb.setPointerCapture=()=>{};pb.hasPointerCapture=()=>true;pb.releasePointerCapture=()=>{};
-precision.run("touchMode=true;choose('redI');hover=[1,5];draw()");
-// Grab the middle square: the anchor must not jump to the finger.
-pb.onpointerdown(ev(70,280));assert.deepEqual(precision.run('hover'),[1,5]);
-pb.onpointermove(ev(91,280));assert(Math.abs(precision.run('floating[0]')-1.525)<.001);assert.deepEqual(precision.run('hover'),[2,5]);
-pb.onpointerup(ev(91,280));assert.equal(precision.run('Object.keys(placements()).length'),0);assert.equal(precision.run('floating'),null);
-precision.elements.get('#confirm').onclick();assert.equal(precision.run('placements().redI.x'),2);assert.equal(precision.run('placements().redI.y'),5);
-// Pick up a lower square of an already placed piece without moving it.
-precision.run('suppressClickUntil=0');precision.elements.get('#grid').children[58].onclick({pointerType:'touch',detail:1});assert.deepEqual(precision.run('hover'),[2,5]);assert.equal(precision.run('selected'),'redI');
-// Rotating near the bottom keeps the preview within the board.
-precision.run("hover=[7,7]");precision.elements.get('#rotate').onclick();assert(precision.run('E.cells(proposed(...hover)).every(c=>c.every(v=>v>=0&&v<8))'));
-// Device wording switches in every supported language, including tutorial.
-for(const code of ['pl','en','de','fr','es','it']){
- precision.run(`lang='${code}';touchMode=true`);
- for(const key of ['selectHelp','rotateHelp','guideControls','startMsg'])assert.equal(precision.run(`t('${key}')`),precision.run(`dictionaries[lang]['${key}Touch']`));
- assert(!/Space|spacja|klawisz|clic droit|Rechtsklick|Leertaste|Espacio|Spazio|right.click|PPM/.test(precision.run("t('guideControls')+' '+t('rotateHelp')")));
- precision.run('touchMode=false');assert.equal(precision.run("t('rotateHelp')"),precision.run('dictionaries[lang].rotateHelpMouse'));
+const guide=boot();assert(guide.elements.get('#rules').open);assert(guide.elements.get('#guideNext').disabled);
+guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),0);
+const solutions=[
+ [['redI',0,1]], [['redI',2,0]], [['redI',0,0],['blueL',1,1]],
+ [['redI',0,0],['blueL',1,1]], [['redI',0,0],['blueL',1,1]],
+ [['redI',0,0],['blueL',1,1]], [['redI',0,1]], [['redI',0,2,'rotate']], [['blueS',0,0,'flip']]
+];
+for(let i=0;i<solutions.length;i++){
+ assert.equal(guide.run('guideIndex'),i);assert.equal(guide.run('lessonSolved()'),false);
+ for(const [id,x,y,transform]of solutions[i]){
+  guide.run(`lessonChoose('${id}');${transform?`lessonShape=E.${transform}(lessonShape);`:''}lessonHover=[${x}+lessonShape[0][0],${y}+lessonShape[0][1]];lessonPlace()`);
+ }
+ assert(guide.run('lessonSolved()'),`lesson ${i} not solvable`);
+ assert.equal(guide.run('Object.keys(placements()).length'),0);
+ if(i<solutions.length-1){assert(!guide.elements.get('#guideNext').disabled);guide.elements.get('#guideNext').onclick();}
 }
-console.log('PASS: 320px board, no grip jump, sub-cell preview, snap after release, explicit confirm, edge clamping, six-language device copy.');
+assert(guide.elements.get('#guideNext').disabled);
+guide.elements.get('#guideExit').onclick();assert(!guide.elements.get('#rules').open);
+guide.run("choose('redI');place(1,5)");const expedition=guide.run('JSON.stringify(state)');guide.elements.get('#rulesBtn').onclick();guide.run("lessonChoose('redI');lessonHover=[0,1];lessonPlace()");guide.elements.get('#guideExit').onclick();assert.equal(guide.run('JSON.stringify(state)'),expedition);
+console.log('PASS: all 9 interactive exercises solvable, Next gated, reset on reopening, expedition preserved.');
+
+const ev=(x,y,type='touch',target=null)=>({pointerType:type,pointerId:1,button:0,isPrimary:true,clientX:x,clientY:y,target:target||{closest:()=>null},preventDefault(){}});
+const touch=boot(),board=touch.elements.get('#board');
+touch.run("touchMode=true;choose('redI');hover=[1,4]");
+board.onpointerdown(ev(150,450));board.onpointermove(ev(150,550));board.onpointerup(ev(150,550));
+assert.equal(touch.run('placements().redI.y'),5);assert.equal(touch.run('selected'),null);
+assert(!html.includes('id="confirm"'));
+// Native swipe on an unselected touch map must not start a drag.
+board.onpointerdown({...ev(150,550),preventDefault(){throw Error('scroll blocked')}});assert(!touch.run('gameDrag.active()'));
+// Pick up, keep grip offset and drop using mouse.
+board.onpointerdown(ev(150,650,'mouse'));board.onpointermove(ev(250,650,'mouse'));board.onpointerup(ev(250,650,'mouse'));
+assert.equal(touch.run('placements().redI.x'),2);assert.equal(touch.run('placements().redI.y'),5);
+// Invalid release keeps a preview, including blinking wrapper and X marks.
+touch.run("choose('redI');hover=[2,5]");board.onpointerdown(ev(250,550));board.onpointermove(ev(50,50));board.onpointerup(ev(50,50));
+assert.equal(touch.run('placements().redI.x'),2);assert.equal(touch.run('selected'),'redI');
+assert(touch.elements.get('#previewLayer').innerHTML.includes('invalid-preview'));assert(touch.elements.get('#previewLayer').innerHTML.includes('invalid-x'));
+touch.elements.get('#remove').onclick();assert.equal(touch.run('Object.keys(placements()).length'),0);
+// Drag straight from the tray with either input; release alone commits.
+for(const type of ['touch','mouse']){
+ const a=boot(),tray=a.elements.get('#tray');const target={closest:()=>({dataset:{piece:'redI'}})};
+ tray.onpointerdown(ev(100,900,type,target));tray.onpointermove(ev(150,550,type,target));tray.onpointerup(ev(150,550,type,target));
+ assert.equal(a.run('placements().redI.x'),1);assert.equal(a.run('placements().redI.y'),5);assert.equal(a.run('selected'),null);
+ const saved=a.run('JSON.stringify(placements())');
+ tray.onpointerdown(ev(100,900,type,target));tray.onpointermove(ev(900,900,type,target));tray.onpointerup(ev(900,900,type,target));
+ assert.equal(a.run('JSON.stringify(placements())'),saved);assert.equal(a.run('hover'),null);
+ a.run("selected=null;shape=null;hover=null;draw()");
+ tray.onpointerdown(ev(100,900,type,target));tray.onpointerup(ev(100,900,type,target));assert.equal(a.run('selected'),'redI');
+ tray.onpointerdown(ev(100,900,type,target));tray.onpointerup(ev(100,900,type,target));assert.equal(a.run('selected'),null);
+}
+console.log('PASS: mouse/touch release commits, tray drag and click toggle, grip offset, invalid X preview, outside drop, touch scrolling.');
 
 const traps=boot();
 traps.run("choose('redI');place(0,3)");
@@ -197,4 +208,20 @@ console.log('PASS: language picker precedes tutorial, does not reopen on next ma
 const centering=boot();centering.run('touchMode=true;window.innerHeight=800;window.scrollY=0;window.scrollTo=o=>window.lastScroll=o');centering.elements.get('#board').getBoundingClientRect=()=>({top:200,height:320});centering.elements.set('.tool-panel',{getBoundingClientRect:()=>({top:560})});centering.elements.get('#guideExit').onclick();assert.equal(centering.run('window.lastScroll.top'),80);console.log('PASS: mobile map centers above fixed controls after tutorial.');
 
 const discard=boot();discard.run("choose('redI');place(1,5)");const saved=discard.run('JSON.stringify(placements())'),undoCount=discard.run('history.length');discard.run("touchMode=true;choose('yellowI');hover=[3,3];floating=[3.2,3];draw()");assert.equal(discard.elements.get('#remove').disabled,false);discard.elements.get('#remove').onclick();assert.equal(discard.run('JSON.stringify(placements())'),saved);assert.equal(discard.run('history.length'),undoCount);for(const name of ['selected','shape','hover','floating','touchGesture'])assert.equal(discard.run(name),null);assert.equal(discard.elements.get('#previewLayer').innerHTML,'');assert(discard.elements.get('#remove').disabled);discard.elements.get('#undo').onclick();assert.equal(discard.run('Object.keys(placements()).length'),0);
-const edgeGuide=boot();edgeGuide.elements.get('#guideNext').onclick();assert.equal(edgeGuide.elements.get('#guideImage').src,'assets/rules-edge.gif');assert(edgeGuide.elements.get('#guideDescription').textContent.includes('krawędzią'));edgeGuide.elements.get('#animationToggle').onclick();assert.equal(edgeGuide.elements.get('#guideImage').src,'assets/rules-edge.png');console.log('PASS: discard unplaced tile clears hand without changing board or undo history; edge tutorial GIF and paused image.');
+console.log('PASS: discard unplaced tile preserves board and undo history.');
+
+// Wrong ghost colour, partial diamonds and inactive spikes cannot complete a lesson.
+const badLessons=boot();
+badLessons.run("guideIndex=3;resetLesson();lessonChoose('blueL');lessonHover=[1,0];lessonPlace()");
+assert.equal(badLessons.run('Object.keys(lessonState.ps).length'),0);assert(!badLessons.run('lessonSolved()'));
+badLessons.run("guideIndex=5;resetLesson();lessonChoose('redI');lessonHover=[0,0];lessonPlace()");assert(!badLessons.run('lessonSolved()'));assert(badLessons.elements.get('#guideNext').disabled);
+badLessons.elements.get('#lessonReset').onclick();assert.equal(badLessons.run('Object.keys(lessonState.ps).length'),0);
+// Cancelled drag never commits; a second pointer does not steal the active gesture.
+const cancelDrag=boot(),ct=cancelDrag.elements.get('#tray');const rt={closest:()=>({dataset:{piece:'redI'}})};
+ct.onpointerdown(ev(10,900,'touch',rt));ct.onpointermove(ev(150,550,'touch',rt));
+ct.onpointerup({...ev(150,550,'touch',rt),pointerId:2});assert(cancelDrag.run('gameDrag.active()'));
+ct.onpointercancel(ev(150,550,'touch',rt));assert(!cancelDrag.run('gameDrag.active()'));assert.equal(cancelDrag.run('Object.keys(placements()).length'),0);
+// Small mobile board: preserve the grabbed square and snap at release.
+const small=boot(),sb=small.elements.get('#board');small.elements.get('#grid').getBoundingClientRect=()=>({left:10,top:20,width:320,height:320});
+small.run("touchMode=true;choose('redI');hover=[1,5]");sb.onpointerdown(ev(70,280));sb.onpointermove(ev(91,280));assert(Math.abs(small.run('floating[0]')-1.525)<.001);sb.onpointerup(ev(91,280));assert.equal(small.run('placements().redI.x'),2);assert.equal(small.run('placements().redI.y'),5);
+console.log('PASS: negative tutorial cases, retry, pointer cancellation, second-pointer isolation, 320px board grip and release.');
