@@ -112,3 +112,5 @@ Walidacja tej aktualizacji: `node test.cjs` oraz `node test-ui.cjs` (symulacja D
 Samouczek zaczyna się ekranem powitalnym z poprawną trasą na osobnej planszy. Dziewięć ćwiczeń zawiera murki. Zadanie z dźwignią ma jedno rozwiązanie, dwa owoce obok kolców i kropkowane połączenie. Duchy są opcjonalne; diamenty zbieramy parami albo pozostawiamy odkryte. `node test-tutorial.cjs` sprawdza wszystkie ustawienia i rozwiązywalność ćwiczeń.
 
 Wersja 3: nowe układy i zestawy klocków w ćwiczeniach, przeredagowane teksty w sześciu językach oraz poprawione skalowanie wycinka grafiki kolców. Obrót i odbicie poprzedzają pozostałe mechaniki; diamenty zamykają samouczek.
+
+Wersja 4: zadanie 2 pozwala zebrać owoc bez dojścia do krawędzi i wyświetla błąd; zadanie 5 pokazuje dwa graficzne przykłady błędnego styku. Zadanie 8 wymusza zebranie diamentów samym układem mapy. Zadanie 9 to dawny układ 8, dopuszczający zarówno 0, jak i wszystkie diamenty. Testy enumerują wszystkie rozwiązania i sprawdzają obie możliwości.

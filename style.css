@@ -62,3 +62,5 @@ footer{justify-content:center}footer>span:empty{display:none}
 #rules .guide-actions{position:static;padding:8px 0;margin:0}
 @media(max-width:600px){#rules{padding:16px;max-height:96dvh}#lessonBoard{width:min(100%,32dvh)}#guideTitle{font-size:22px;margin-bottom:10px}.lesson-tools{margin:10px 0}#lessonTray .piece-button{height:62px;width:70px}.guide-top{margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){.invalid-preview{animation:none;opacity:.7}}
+
+#contactExamples{display:flex;gap:12px;margin:10px 0}#contactExamples figure{flex:1;margin:0;padding:8px;border:2px solid #b94753;border-radius:12px;background:#fff1ed;text-align:center}#contactExamples svg{height:125px;max-width:100%;display:block;margin:auto}#contactExamples figcaption{font-size:12px;line-height:1.4;font-weight:700;color:#842b38}

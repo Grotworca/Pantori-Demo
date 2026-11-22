@@ -1,7 +1,7 @@
 'use strict';
 let guideWelcome=true,guideIndex=0,guideStartup=true,lessonState=null,lessonSelected=null,lessonShape=null,lessonHover=null,lessonSuppress=0;
 const lessonBase={size:5,walls:[],ghosts:[],fruits:[],diamonds:[],spikes:[],pieces:['redI']};
-const lessons=[{"key":"fruit","fruits":[[0,1],[1,2]],"pieces":["greenT"],"walls":[[1,4],[3,4],[0,0],[4,2],[4,1],[2,4],[2,2],[1,0],[4,4]]},{"key":"edge","fruits":[[3,2]],"pieces":["blueL"],"walls":[[1,3],[3,1],[1,0],[2,1],[2,3],[3,0],[0,2],[2,4],[2,2]]},{"key":"rotate","fruits":[[0,3],[3,3]],"pieces":["yellowI"],"walls":[[2,2],[0,0],[4,2],[3,4],[3,1],[0,1],[3,0],[4,0],[1,0]]},{"key":"flip","fruits":[[0,1],[2,3]],"target":[[0,1],[1,1],[1,2],[1,3],[2,3]],"pieces":["blueS"],"walls":[[4,1],[2,4],[3,0],[4,0],[4,3],[0,3],[4,2],[2,2],[2,1]]},{"key":"contact","fruits":[[2,0],[3,3]],"pieces":["redT","greenT"],"walls":[[0,3],[3,2],[3,4],[1,3],[2,1],[4,0],[0,4],[4,3],[4,1]]},{"key":"ghost","fruits":[[0,1],[4,4]],"ghosts":[{"at":[1,2],"color":"green"},{"at":[3,4],"color":"yellow"},{"at":[4,0],"color":"red"}],"pieces":["greenU","yellowI"],"walls":[[4,1],[0,2],[3,3],[0,0],[2,2],[4,2],[1,0],[3,1],[2,0]]},{"key":"spikes","fruits":[[2,2],[1,3]],"spikes":[{"at":[2,3],"lever":[0,1]}],"pieces":["yellowI","blueL"],"walls":[[1,1],[3,1],[3,4],[4,4],[1,2],[2,1],[1,0],[3,3],[3,2],[0,4],[4,0],[4,3],[2,4],[3,0],[4,2],[4,1]]},{"key":"diamonds","fruits":[[4,1],[0,1]],"diamonds":[[3,3],[1,0]],"diamondGoal":"all","pieces":["redT","blueL"],"walls":[[4,4],[1,2],[2,3],[4,2],[3,0],[1,4],[1,3],[0,3],[0,4]]},{"key":"diamondsNone","fruits":[[3,0],[0,3]],"diamonds":[[0,0],[4,4]],"diamondGoal":"none","pieces":["greenU","redI"],"walls":[[0,4],[1,4],[3,4],[4,3],[2,1],[3,3],[4,0],[1,0],[1,2]]}];
+const lessons=[{"key":"fruit","fruits":[[0,1],[1,2]],"pieces":["greenT"],"walls":[[1,4],[3,4],[0,0],[4,2],[4,1],[2,4],[2,2],[1,0],[4,4]]},{"key":"edge","fruits":[[2,2]],"pieces":["redI"],"walls":[[0,0],[4,0],[0,4],[4,4],[1,1],[3,3]]},{"key":"rotate","fruits":[[0,3],[3,3]],"pieces":["yellowI"],"walls":[[2,2],[0,0],[4,2],[3,4],[3,1],[0,1],[3,0],[4,0],[1,0]]},{"key":"flip","fruits":[[0,1],[2,3]],"target":[[0,1],[1,1],[1,2],[1,3],[2,3]],"pieces":["blueS"],"walls":[[4,1],[2,4],[3,0],[4,0],[4,3],[0,3],[4,2],[2,2],[2,1]]},{"key":"contact","fruits":[[2,0],[3,3]],"pieces":["redT","greenT"],"walls":[[0,3],[3,2],[3,4],[1,3],[2,1],[4,0],[0,4],[4,3],[4,1]]},{"key":"ghost","fruits":[[0,1],[4,4]],"ghosts":[{"at":[1,2],"color":"green"},{"at":[3,4],"color":"yellow"},{"at":[4,0],"color":"red"}],"pieces":["greenU","yellowI"],"walls":[[4,1],[0,2],[3,3],[0,0],[2,2],[4,2],[1,0],[3,1],[2,0]]},{"key":"spikes","fruits":[[2,2],[1,3]],"spikes":[{"at":[2,3],"lever":[0,1]}],"pieces":["yellowI","blueL"],"walls":[[1,1],[3,1],[3,4],[4,4],[1,2],[2,1],[1,0],[3,3],[3,2],[0,4],[4,0],[4,3],[2,4],[3,0],[4,2],[4,1]]},{"key":"diamonds","fruits":[[0,3],[4,3]],"diamonds":[[1,1],[3,4]],"pieces":["redT","blueL"],"walls":[[0,0],[3,2],[2,1],[0,2],[1,4],[3,0],[3,1],[4,1],[4,0],[4,2],[2,4]]},{"key":"diamondsNone","fruits":[[4,1],[0,1]],"diamonds":[[3,3],[1,0]],"pieces":["redT","blueL"],"walls":[[4,4],[1,2],[2,3],[4,2],[3,0],[1,4],[1,3],[0,3],[0,4]]}];
 const welcomePieces=[{id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:0,y:0},{id:'blueL',color:'blue',cells:[[1,0],[0,1],[1,1]],x:1,y:1}];
 function lesson(){return {...lessonBase,...(guideWelcome?{key:'welcome',pieces:['redI','blueL'],fruits:[[0,0],[2,1]],walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]]}:lessons[guideIndex])};}
 function lessonVisible(){if(guideWelcome)return welcomePieces;return Object.values(lessonState.ps).filter(p=>p.id!==lessonSelected);}
@@ -11,8 +11,6 @@ function lessonSolved(){
  const l=lesson(),ps=lessonState.ps;
  if(lessonSelected||!Pantori.check(l,ps).ok)return false;
  const covered=new Set(Object.values(ps).flatMap(Pantori.cells).map(Pantori.key));
- if(l.diamondGoal==='all'&&!l.diamonds.every(c=>covered.has(Pantori.key(c))))return false;
- if(l.diamondGoal==='none'&&l.diamonds.some(c=>covered.has(Pantori.key(c))))return false;
  if(l.target&&(covered.size!==l.target.length||!l.target.every(c=>covered.has(Pantori.key(c)))))return false;
  return true;
 }
@@ -53,6 +51,7 @@ function renderGuide(){
  const $=s=>document.querySelector(s),l=lesson();
  $('#guideCount').textContent=guideWelcome?t('welcomeLabel'):t('guideCount',{n:guideIndex+1,total:lessons.length});
  for(const id of ['#lessonGrid','#lessonTray','#lessonTools','#lessonFeedback'])$(id).hidden=guideWelcome&&id!=='#lessonFeedback';
+ renderContactExamples(!guideWelcome&&l.key==='contact');
  $('#guideTitle').textContent=t(guideWelcome?'welcomeTitle':'lessonTitle_'+l.key);$('#guideDescription').textContent=t(guideWelcome?'welcomeText':'lesson_'+l.key);
  if(!guideWelcome&&l.key==='ghost'){const note=document.createElement('strong');note.textContent=t('ghostOptional');$('#guideDescription').append(document.createElement('br'),note);}
  $('#guidePrev').textContent='← '+t('guidePrev');$('#guidePrev').disabled=guideWelcome;
@@ -79,3 +78,10 @@ document.querySelector('#guideExit').onclick=()=>{lessonDrag.cancel();document.q
 document.querySelector('#rules').addEventListener('cancel',()=>{lessonDrag.cancel();guideStartup=false;});
 document.querySelector('#lessonBoard').oncontextmenu=e=>{if(lessonSelected){e.preventDefault();document.querySelector('#lessonRotate').click();}};
 document.addEventListener('keydown',e=>{if(!document.querySelector('#rules').open||!lessonSelected||e.ctrlKey||e.metaKey||e.altKey)return;if(e.code==='Space'){e.preventDefault();if(!e.repeat)document.querySelector('#lessonRotate').click();}else if(e.key.toLowerCase()==='f'){e.preventDefault();document.querySelector('#lessonFlip').click();}});
+
+function renderContactExamples(show){
+ const host=document.querySelector('#contactExamples');host.hidden=!show;if(!show)return;
+ const red={id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:0,y:0};
+ const blue=y=>({id:'blueL',color:'blue',cells:[[0,0],[1,0],[0,1]],x:1,y});
+ host.innerHTML=[['contactMany',0],['contactDiagonal',3]].map(([key,y])=>`<figure><svg viewBox="-10 -10 320 520" role="img" aria-label="${t(key)}">${lessonTiles(red)}${lessonTiles(blue(y))}<text x="265" y="95" text-anchor="middle" font-size="80" font-weight="bold" fill="#b52c40">×</text></svg><figcaption>${t(key)}</figcaption></figure>`).join('');
+}
