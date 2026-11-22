@@ -108,3 +108,5 @@ Klocki można przeciągać ze zbioru bezpośrednio na mapę lub najpierw wybrać
 Nowe pliki wymagane do uruchomienia: `piece-drag.js`, `tutorial.js`, `interaction-i18n.js`. Wgraj całą zawartość paczki z nadpisaniem, zachowując folder assets.
 
 Walidacja tej aktualizacji: `node test.cjs` oraz `node test-ui.cjs` (symulacja DOM i zdarzeń wskaźnika, 9 rozwiązywalnych ćwiczeń, blokada Dalej, brak zmian postępu, gesty myszy/dotyku, reguły i regresje duchów). Test pełnej przeglądarki nie został ukończony: środowisko blokuje uruchomienie Chromium. Brak testu na fizycznym telefonie.
+
+Samouczek zaczyna się ekranem powitalnym z poprawną trasą na osobnej planszy. Dziewięć ćwiczeń zawiera murki. Zadanie z dźwignią ma jedno rozwiązanie, dwa owoce obok kolców i kropkowane połączenie. Duchy są opcjonalne; diamenty zbieramy parami albo pozostawiamy odkryte. `node test-tutorial.cjs` sprawdza wszystkie ustawienia i rozwiązywalność ćwiczeń.

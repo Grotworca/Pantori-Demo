@@ -1,33 +1,34 @@
 'use strict';
-let guideIndex=0,guideStartup=true,lessonState=null,lessonSelected=null,lessonShape=null,lessonHover=null,lessonSuppress=0;
+let guideWelcome=true,guideIndex=0,guideStartup=true,lessonState=null,lessonSelected=null,lessonShape=null,lessonHover=null,lessonSuppress=0;
 const lessonBase={size:5,walls:[],ghosts:[],fruits:[],diamonds:[],spikes:[],pieces:['redI']};
 const lessons=[
- {key:'fruit',fruits:[[0,1],[0,3]]},
- {key:'edge',fruits:[[2,2]]},
- {key:'contact',pieces:['redI','blueL'],fruits:[[0,0],[2,1]]},
- {key:'ghost',pieces:['redI','blueL'],fruits:[[0,0],[2,2]],ghosts:[{at:[0,1],color:'red'},{at:[2,1],color:'blue'}]},
- {key:'spikes',pieces:['redI','blueL'],fruits:[[0,0],[2,1]],spikes:[{at:[2,1],lever:[0,1]}]},
- {key:'diamonds',pieces:['redI','blueL'],fruits:[[0,0],[2,2]],diamonds:[[0,1],[2,1]],diamondGoal:'all'},
- {key:'diamondsNone',fruits:[[0,1],[0,3]],diamonds:[[2,1],[3,3]],diamondGoal:'none'},
- {key:'rotate',fruits:[[0,2],[2,2]]},
- {key:'flip',pieces:['blueS'],target:[[0,0],[1,0],[1,1],[1,2],[2,2]],fruits:[[0,0],[2,2]]}
+ {key:'fruit',walls:[[1,1],[2,0],[2,2],[3,3],[1,4]],fruits:[[0,1],[0,3]]},
+ {key:'edge',walls:[[1,0],[1,2],[3,2],[2,3],[4,0],[0,4]],fruits:[[2,2]]},
+ {key:'contact',walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,1]]},
+ {key:'ghost',walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,2]],ghosts:[{at:[0,1],color:'red'},{at:[2,1],color:'blue'},{at:[4,3],color:'red'}]},
+ {key:'spikes',walls:[[0,0],[2,0],[4,0],[0,1],[2,1],[4,1],[0,2],[4,2],[1,3],[2,3],[3,3],[0,4],[2,4],[4,4]],pieces:['redI','blueL'],fruits:[[3,1],[2,2]],spikes:[{at:[3,2],lever:[1,0]}]},
+ {key:'diamonds',walls:[[1,0],[3,0],[3,1],[1,3],[3,3],[0,4],[4,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,2]],diamonds:[[0,1],[2,1]],diamondGoal:'all'},
+ {key:'diamondsNone',walls:[[0,0],[2,0],[0,2],[2,1],[4,2],[1,3],[3,3]],pieces:['redI','blueL'],fruits:[[1,0],[3,1]],diamonds:[[3,0],[4,3]],diamondGoal:'none'},
+ {key:'rotate',walls:[[0,1],[1,1],[3,2],[1,3],[3,4]],fruits:[[0,2],[2,2]]},
+ {key:'flip',walls:[[2,0],[0,1],[2,1],[0,2],[1,3],[3,3]],pieces:['blueS'],target:[[0,0],[1,0],[1,1],[1,2],[2,2]],fruits:[[0,0],[2,2]]}
 ];
-function lesson(){return {...lessonBase,...lessons[guideIndex]};}
-function lessonVisible(){return Object.values(lessonState.ps).filter(p=>p.id!==lessonSelected);}
+const welcomePieces=[{id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:0,y:0},{id:'blueL',color:'blue',cells:[[1,0],[0,1],[1,1]],x:1,y:1}];
+function lesson(){return {...lessonBase,...lessons[guideWelcome?2:guideIndex]};}
+function lessonVisible(){if(guideWelcome)return welcomePieces;return Object.values(lessonState.ps).filter(p=>p.id!==lessonSelected);}
 function lessonProposal(){const a=lessonShape[0];return {id:lessonSelected,color:PANTORI_PIECES[lessonSelected].color,cells:lessonShape,x:lessonHover[0]-a[0],y:lessonHover[1]-a[1]};}
 function lessonSolved(){
+ if(guideWelcome)return true;
  const l=lesson(),ps=lessonState.ps;
  if(lessonSelected||!Pantori.check(l,ps).ok)return false;
  const covered=new Set(Object.values(ps).flatMap(Pantori.cells).map(Pantori.key));
- if(l.ghosts.some(g=>!covered.has(Pantori.key(g.at))))return false;
  if(l.diamondGoal==='all'&&!l.diamonds.every(c=>covered.has(Pantori.key(c))))return false;
  if(l.diamondGoal==='none'&&l.diamonds.some(c=>covered.has(Pantori.key(c))))return false;
  if(l.target&&(covered.size!==l.target.length||!l.target.every(c=>covered.has(Pantori.key(c)))))return false;
  return true;
 }
-function lessonChoose(id){if(lessonSelected===id){lessonSelected=null;lessonShape=null;lessonHover=null;}else{lessonSelected=id;lessonShape=Pantori.normalize(lessonState.ps[id]?.cells||PANTORI_PIECES[id].cells);lessonHover=null;}renderGuide();}
+function lessonChoose(id){if(guideWelcome)return;if(lessonSelected===id){lessonSelected=null;lessonShape=null;lessonHover=null;}else{lessonSelected=id;lessonShape=Pantori.normalize(lessonState.ps[id]?.cells||PANTORI_PIECES[id].cells);lessonHover=null;}renderGuide();}
 function lessonPlace(){
- if(!lessonSelected||!lessonHover)return;
+ if(guideWelcome||!lessonSelected||!lessonHover)return;
  const p=lessonProposal(),error=Pantori.validPlacement(lesson(),p,lessonVisible());
  if(error){renderLesson();document.querySelector('#lessonFeedback').textContent=translateError(error);return;}
  lessonState.ps[lessonSelected]=p;lessonSelected=null;lessonShape=null;lessonHover=null;renderGuide();
@@ -39,6 +40,8 @@ function renderLesson(){
  if(!lessonState)return;
  const l=lesson(),ps=lessonVisible(),covered=new Set(ps.flatMap(Pantori.cells).map(Pantori.key));
  let svg='';for(let y=0;y<5;y++)for(let x=0;x<5;x++)svg+=`<rect x="${x*100+2}" y="${y*100+2}" width="96" height="96" rx="7" fill="#fffdf4" stroke="#272331" stroke-width="4"/>`;
+ l.walls.forEach(([x,y])=>{svg+=`<g data-wall="${x},${y}"><rect x="${x*100+4}" y="${y*100+4}" width="92" height="92" rx="5" fill="#6376c7"/><path d="M${x*100+4} ${y*100+34}h92m-92 32h92M${x*100+50} ${y*100+4}v30m-23 0v32m46 -32v32m-23 0v30" fill="none" stroke="#e7edff" stroke-width="4"/></g>`;});
+ l.spikes.forEach(s=>{svg+=`<path data-lever-link="true" d="M${s.lever[0]*100+50} ${s.lever[1]*100+50}V${s.at[1]*100+50}H${s.at[0]*100+50}" fill="none" stroke="#302c40" stroke-width="7" stroke-dasharray="1 17" stroke-linecap="round"/>`;});
  if(l.target)svg+=l.target.map(([x,y])=>`<rect x="${x*100+10}" y="${y*100+10}" width="80" height="80" rx="6" fill="#dce4ff" stroke="#516fc7" stroke-dasharray="7 6" stroke-width="3"/>`).join('');
  l.fruits.forEach(at=>svg+=lessonIcon(at,'assets/sprites/icon-16-3-2.png'));
  l.spikes.forEach(s=>{const active=covered.has(Pantori.key(s.lever));svg+=lessonIcon(s.at,active?'assets/spikes-retracted.png':'assets/tutorial-spikes.png');svg+=lessonIcon(s.lever,active?'assets/lever-left.png':'assets/tutorial-lever.png');});
@@ -51,22 +54,24 @@ function renderLesson(){
  document.querySelector('#lessonBoard').classList.toggle('piece-selected',!!lessonSelected);
  const solved=lessonSolved();
  if(!error&&!lessonSelected&&!solved&&ps.length===l.pieces.length)error=Pantori.check(l,lessonState.ps).errors[0]||null;
- document.querySelector('#lessonFeedback').textContent=error?translateError(error):t(solved?'lessonSuccess':'lessonTry');
+ document.querySelector('#lessonFeedback').textContent=error?translateError(error):t(guideWelcome?'welcomeExample':solved?'lessonSuccess':'lessonTry');
  document.querySelector('#lessonFeedback').classList.toggle('solved',solved);
  document.querySelector('#guideNext').disabled=!solved||guideIndex===lessons.length-1;
  document.querySelector('#lessonRotate').disabled=document.querySelector('#lessonFlip').disabled=!lessonSelected;
 }
 function renderGuide(){
  const $=s=>document.querySelector(s),l=lesson();
- $('#guideCount').textContent=t('guideCount',{n:guideIndex+1,total:lessons.length});
- $('#guideTitle').textContent=t('lessonTitle_'+l.key);$('#guideDescription').textContent=t('lesson_'+l.key);
- $('#guidePrev').textContent='← '+t('guidePrev');$('#guidePrev').disabled=guideIndex===0;
+ $('#guideCount').textContent=guideWelcome?t('welcomeLabel'):t('guideCount',{n:guideIndex+1,total:lessons.length});
+ for(const id of ['#lessonGrid','#lessonTray','#lessonTools','#lessonFeedback'])$(id).hidden=guideWelcome&&id!=='#lessonFeedback';
+ $('#guideTitle').textContent=t(guideWelcome?'welcomeTitle':'lessonTitle_'+l.key);$('#guideDescription').textContent=t(guideWelcome?'welcomeText':'lesson_'+l.key);
+ if(!guideWelcome&&l.key==='ghost'){const note=document.createElement('strong');note.textContent=t('ghostOptional');$('#guideDescription').append(document.createElement('br'),note);}
+ $('#guidePrev').textContent='← '+t('guidePrev');$('#guidePrev').disabled=guideWelcome;
  $('#guideNext').textContent=t('guideNext')+' →';$('#guideExit').textContent=t(guideStartup?'startGame':'backGame');
  if(!lessonState){$('#guideNext').disabled=true;return;}
  $('#lessonTray').innerHTML='';for(const id of l.pieces){const b=document.createElement('button');b.dataset.piece=id;b.className='piece-button'+(id===lessonSelected?' active':'');b.setAttribute('aria-label',t(id));b.setAttribute('aria-pressed',String(id===lessonSelected));b.innerHTML=tileSvg(id===lessonSelected?lessonShape:lessonState.ps[id]?.cells||PANTORI_PIECES[id].cells,PANTORI_PIECES[id].color);b.onclick=e=>{if(e.detail!==0&&Date.now()<lessonSuppress)return;lessonChoose(id)};$('#lessonTray').append(b);}
  renderLesson();
 }
-function openGuide(startup=false){guideStartup=startup;guideIndex=0;resetLesson();if(!document.querySelector('#rules').open)document.querySelector('#rules').showModal();}
+function openGuide(startup=false){guideStartup=startup;guideWelcome=true;guideIndex=0;resetLesson();if(!document.querySelector('#rules').open)document.querySelector('#rules').showModal();}
 // The exercise owns its own placements; playing it never mutates the expedition.
 const lessonDrag=installPieceDrag({board:document.querySelector('#lessonBoard'),tray:document.querySelector('#lessonTray'),surface:document.querySelector('#lessonBoard'),size:()=>5,
  selected:()=>lessonSelected,shape:()=>lessonShape,hover:()=>lessonHover,click:lessonChoose,
@@ -78,8 +83,8 @@ for(let y=0;y<5;y++)for(let x=0;x<5;x++){const b=document.createElement('button'
 document.querySelector('#lessonRotate').onclick=()=>{if(lessonSelected){lessonShape=Pantori.rotate(lessonShape);renderGuide();}};
 document.querySelector('#lessonFlip').onclick=()=>{if(lessonSelected){lessonShape=Pantori.flip(lessonShape);renderGuide();}};
 document.querySelector('#lessonReset').onclick=()=>{lessonDrag.cancel();resetLesson();};
-document.querySelector('#guideNext').onclick=()=>{if(lessonSolved()&&guideIndex<lessons.length-1){lessonDrag.cancel();guideIndex++;resetLesson();}};
-document.querySelector('#guidePrev').onclick=()=>{if(guideIndex>0){lessonDrag.cancel();guideIndex--;resetLesson();}};
+document.querySelector('#guideNext').onclick=()=>{if(guideWelcome){guideWelcome=false;resetLesson();return;}if(lessonSolved()&&guideIndex<lessons.length-1){lessonDrag.cancel();guideIndex++;resetLesson();}};
+document.querySelector('#guidePrev').onclick=()=>{if(!guideWelcome){lessonDrag.cancel();if(guideIndex===0)guideWelcome=true;else guideIndex--;resetLesson();}};
 document.querySelector('#guideExit').onclick=()=>{lessonDrag.cancel();document.querySelector('#rules').close();guideStartup=false;centerMobileBoard();};
 document.querySelector('#rules').addEventListener('cancel',()=>{lessonDrag.cancel();guideStartup=false;});
 document.querySelector('#lessonBoard').oncontextmenu=e=>{if(lessonSelected){e.preventDefault();document.querySelector('#lessonRotate').click();}};

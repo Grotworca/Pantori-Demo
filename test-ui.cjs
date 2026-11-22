@@ -4,7 +4,7 @@ function boot(start=true){const elements=new Map(),storageCalls=[];
  const document={documentElement:{setAttribute(){}},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
  const context={document,requestAnimationFrame:fn=>{fn();return 0},matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
  for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-sprites.js','interaction-i18n.js','piece-drag.js','tutorial.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
- if(start)elements.get('#startLanguages').children[0].onclick();
+ if(start){elements.get('#startLanguages').children[0].onclick();elements.get('#guideNext').onclick();}
  return {run:s=>vm.runInContext(s,context),elements,storageCalls};}
 const app=boot();assert.deepEqual(app.storageCalls,['pantori-demo-v1']);
 app.run("choose('redI');place(1,5)");assert.equal(app.run('Object.keys(placements()).length'),1);
@@ -29,8 +29,8 @@ const guide=boot();assert(guide.elements.get('#rules').open);assert(guide.elemen
 guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),0);
 const solutions=[
  [['redI',0,1]], [['redI',2,0]], [['redI',0,0],['blueL',1,1]],
- [['redI',0,0],['blueL',1,1]], [['redI',0,0],['blueL',1,1]],
- [['redI',0,0],['blueL',1,1]], [['redI',0,1]], [['redI',0,2,'rotate']], [['blueS',0,0,'flip']]
+ [['redI',0,0],['blueL',1,1]], [['redI',1,0],['blueL',2,1]],
+ [['redI',0,0],['blueL',1,1]], [['redI',1,0],['blueL',2,1]], [['redI',0,2,'rotate']], [['blueS',0,0,'flip']]
 ];
 for(let i=0;i<solutions.length;i++){
  assert.equal(guide.run('guideIndex'),i);assert.equal(guide.run('lessonSolved()'),false);
@@ -43,7 +43,7 @@ for(let i=0;i<solutions.length;i++){
 }
 assert(guide.elements.get('#guideNext').disabled);
 guide.elements.get('#guideExit').onclick();assert(!guide.elements.get('#rules').open);
-guide.run("choose('redI');place(1,5)");const expedition=guide.run('JSON.stringify(state)');guide.elements.get('#rulesBtn').onclick();guide.run("lessonChoose('redI');lessonHover=[0,1];lessonPlace()");guide.elements.get('#guideExit').onclick();assert.equal(guide.run('JSON.stringify(state)'),expedition);
+guide.run("choose('redI');place(1,5)");const expedition=guide.run('JSON.stringify(state)');guide.elements.get('#rulesBtn').onclick();guide.elements.get('#guideNext').onclick();guide.run("lessonChoose('redI');lessonHover=[0,1];lessonPlace()");guide.elements.get('#guideExit').onclick();assert.equal(guide.run('JSON.stringify(state)'),expedition);
 console.log('PASS: all 9 interactive exercises solvable, Next gated, reset on reopening, expedition preserved.');
 
 const ev=(x,y,type='touch',target=null)=>({pointerType:type,pointerId:1,button:0,isPrimary:true,clientX:x,clientY:y,target:target||{closest:()=>null},preventDefault(){}});
