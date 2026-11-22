@@ -101,7 +101,7 @@ w tym nowy katalog `assets/sprites/` i `icon-sprites.js`.
 
 ## Interaktywny samouczek i przeciąganie
 
-Samouczek ma 9 zadań: owoce, krawędź, kontakt klocków, duchy, dźwignia i kolce, wszystkie diamenty, żaden diament, obrót, odbicie. Przycisk Dalej odblokowuje się dopiero po rozwiązaniu ćwiczenia. Rozpocznij grę / Wróć do gry pozwala zakończyć samouczek. Zadania nie zmieniają stanu głównej gry.
+Samouczek ma 9 zadań: owoce, krawędź, obrót, odbicie, kontakt klocków, duchy, dźwignia i kolce, wszystkie diamenty, żaden diament. Przycisk Dalej odblokowuje się dopiero po rozwiązaniu ćwiczenia. Rozpocznij grę / Wróć do gry pozwala zakończyć samouczek. Zadania nie zmieniają stanu głównej gry.
 
 Klocki można przeciągać ze zbioru bezpośrednio na mapę lub najpierw wybrać kliknięciem/dotknięciem. Puszczenie przeciąganego klocka zatwierdza prawidłową pozycję. Niedozwolony podgląd miga i pokazuje X na każdym segmencie; ruch nie jest zatwierdzany. Przy ograniczonym ruchu systemu X pozostaje widoczny bez migania. Przycisk Ustaw został usunięty. Na telefonie mapa bez wybranego klocka nadal pozwala przewijać stronę.
 
@@ -110,3 +110,5 @@ Nowe pliki wymagane do uruchomienia: `piece-drag.js`, `tutorial.js`, `interactio
 Walidacja tej aktualizacji: `node test.cjs` oraz `node test-ui.cjs` (symulacja DOM i zdarzeń wskaźnika, 9 rozwiązywalnych ćwiczeń, blokada Dalej, brak zmian postępu, gesty myszy/dotyku, reguły i regresje duchów). Test pełnej przeglądarki nie został ukończony: środowisko blokuje uruchomienie Chromium. Brak testu na fizycznym telefonie.
 
 Samouczek zaczyna się ekranem powitalnym z poprawną trasą na osobnej planszy. Dziewięć ćwiczeń zawiera murki. Zadanie z dźwignią ma jedno rozwiązanie, dwa owoce obok kolców i kropkowane połączenie. Duchy są opcjonalne; diamenty zbieramy parami albo pozostawiamy odkryte. `node test-tutorial.cjs` sprawdza wszystkie ustawienia i rozwiązywalność ćwiczeń.
+
+Wersja 3: nowe układy i zestawy klocków w ćwiczeniach, przeredagowane teksty w sześciu językach oraz poprawione skalowanie wycinka grafiki kolców. Obrót i odbicie poprzedzają pozostałe mechaniki; diamenty zamykają samouczek.

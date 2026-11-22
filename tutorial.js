@@ -1,19 +1,9 @@
 'use strict';
 let guideWelcome=true,guideIndex=0,guideStartup=true,lessonState=null,lessonSelected=null,lessonShape=null,lessonHover=null,lessonSuppress=0;
 const lessonBase={size:5,walls:[],ghosts:[],fruits:[],diamonds:[],spikes:[],pieces:['redI']};
-const lessons=[
- {key:'fruit',walls:[[1,1],[2,0],[2,2],[3,3],[1,4]],fruits:[[0,1],[0,3]]},
- {key:'edge',walls:[[1,0],[1,2],[3,2],[2,3],[4,0],[0,4]],fruits:[[2,2]]},
- {key:'contact',walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,1]]},
- {key:'ghost',walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,2]],ghosts:[{at:[0,1],color:'red'},{at:[2,1],color:'blue'},{at:[4,3],color:'red'}]},
- {key:'spikes',walls:[[0,0],[2,0],[4,0],[0,1],[2,1],[4,1],[0,2],[4,2],[1,3],[2,3],[3,3],[0,4],[2,4],[4,4]],pieces:['redI','blueL'],fruits:[[3,1],[2,2]],spikes:[{at:[3,2],lever:[1,0]}]},
- {key:'diamonds',walls:[[1,0],[3,0],[3,1],[1,3],[3,3],[0,4],[4,4]],pieces:['redI','blueL'],fruits:[[0,0],[2,2]],diamonds:[[0,1],[2,1]],diamondGoal:'all'},
- {key:'diamondsNone',walls:[[0,0],[2,0],[0,2],[2,1],[4,2],[1,3],[3,3]],pieces:['redI','blueL'],fruits:[[1,0],[3,1]],diamonds:[[3,0],[4,3]],diamondGoal:'none'},
- {key:'rotate',walls:[[0,1],[1,1],[3,2],[1,3],[3,4]],fruits:[[0,2],[2,2]]},
- {key:'flip',walls:[[2,0],[0,1],[2,1],[0,2],[1,3],[3,3]],pieces:['blueS'],target:[[0,0],[1,0],[1,1],[1,2],[2,2]],fruits:[[0,0],[2,2]]}
-];
+const lessons=[{"key":"fruit","fruits":[[0,1],[1,2]],"pieces":["greenT"],"walls":[[1,4],[3,4],[0,0],[4,2],[4,1],[2,4],[2,2],[1,0],[4,4]]},{"key":"edge","fruits":[[3,2]],"pieces":["blueL"],"walls":[[1,3],[3,1],[1,0],[2,1],[2,3],[3,0],[0,2],[2,4],[2,2]]},{"key":"rotate","fruits":[[0,3],[3,3]],"pieces":["yellowI"],"walls":[[2,2],[0,0],[4,2],[3,4],[3,1],[0,1],[3,0],[4,0],[1,0]]},{"key":"flip","fruits":[[0,1],[2,3]],"target":[[0,1],[1,1],[1,2],[1,3],[2,3]],"pieces":["blueS"],"walls":[[4,1],[2,4],[3,0],[4,0],[4,3],[0,3],[4,2],[2,2],[2,1]]},{"key":"contact","fruits":[[2,0],[3,3]],"pieces":["redT","greenT"],"walls":[[0,3],[3,2],[3,4],[1,3],[2,1],[4,0],[0,4],[4,3],[4,1]]},{"key":"ghost","fruits":[[0,1],[4,4]],"ghosts":[{"at":[1,2],"color":"green"},{"at":[3,4],"color":"yellow"},{"at":[4,0],"color":"red"}],"pieces":["greenU","yellowI"],"walls":[[4,1],[0,2],[3,3],[0,0],[2,2],[4,2],[1,0],[3,1],[2,0]]},{"key":"spikes","fruits":[[2,2],[1,3]],"spikes":[{"at":[2,3],"lever":[0,1]}],"pieces":["yellowI","blueL"],"walls":[[1,1],[3,1],[3,4],[4,4],[1,2],[2,1],[1,0],[3,3],[3,2],[0,4],[4,0],[4,3],[2,4],[3,0],[4,2],[4,1]]},{"key":"diamonds","fruits":[[4,1],[0,1]],"diamonds":[[3,3],[1,0]],"diamondGoal":"all","pieces":["redT","blueL"],"walls":[[4,4],[1,2],[2,3],[4,2],[3,0],[1,4],[1,3],[0,3],[0,4]]},{"key":"diamondsNone","fruits":[[3,0],[0,3]],"diamonds":[[0,0],[4,4]],"diamondGoal":"none","pieces":["greenU","redI"],"walls":[[0,4],[1,4],[3,4],[4,3],[2,1],[3,3],[4,0],[1,0],[1,2]]}];
 const welcomePieces=[{id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:0,y:0},{id:'blueL',color:'blue',cells:[[1,0],[0,1],[1,1]],x:1,y:1}];
-function lesson(){return {...lessonBase,...lessons[guideWelcome?2:guideIndex]};}
+function lesson(){return {...lessonBase,...(guideWelcome?{key:'welcome',pieces:['redI','blueL'],fruits:[[0,0],[2,1]],walls:[[1,0],[3,0],[4,1],[1,3],[3,3],[0,4]]}:lessons[guideIndex])};}
 function lessonVisible(){if(guideWelcome)return welcomePieces;return Object.values(lessonState.ps).filter(p=>p.id!==lessonSelected);}
 function lessonProposal(){const a=lessonShape[0];return {id:lessonSelected,color:PANTORI_PIECES[lessonSelected].color,cells:lessonShape,x:lessonHover[0]-a[0],y:lessonHover[1]-a[1]};}
 function lessonSolved(){
@@ -34,7 +24,7 @@ function lessonPlace(){
  lessonState.ps[lessonSelected]=p;lessonSelected=null;lessonShape=null;lessonHover=null;renderGuide();
 }
 function resetLesson(){lessonSelected=null;lessonShape=null;lessonHover=null;lessonState={ps:{}};renderGuide();}
-function lessonIcon(at,src,gray=false){if(src==='assets/tutorial-spikes.png'||src==='assets/tutorial-lever.png'){const crop=src.includes('spikes')?'205 105 90 90':'5 405 90 90';return `<svg x="${at[0]*100+10}" y="${at[1]*100+10}" width="80" height="80" viewBox="${crop}"><image href="assets/map-16.png" width="800" height="800"/></svg>`;}return `<image href="${src}" x="${at[0]*100+16}" y="${at[1]*100+16}" width="68" height="68" ${gray?'style="filter:grayscale(1)"':''}/>`;}
+function lessonIcon(at,src,gray=false){if(src==='assets/tutorial-spikes.png'||src==='assets/tutorial-lever.png'){const crop=src.includes('spikes')?'208 108 90 82':'5 405 90 90';return `<svg x="${at[0]*100+10}" y="${at[1]*100+10}" width="80" height="80" viewBox="${crop}"><image href="assets/map-16.png" width="800" height="800" preserveAspectRatio="none"/></svg>`;}return `<image href="${src}" x="${at[0]*100+16}" y="${at[1]*100+16}" width="68" height="68" ${gray?'style="filter:grayscale(1)"':''}/>`;}
 function lessonTiles(p,preview=false,bad=false){return `<g class="${bad?'invalid-preview':''}">${Pantori.cells(p).map(([x,y])=>`<rect x="${x*100+5}" y="${y*100+5}" width="90" height="90" rx="8" fill="${bad?'#888':palette[p.color]}" fill-opacity="${preview?.45:.64}" stroke="${bad?'#555':palette[p.color]}" stroke-width="6" ${preview?'stroke-dasharray="9 5"':''}/>${bad?`<path d="M${x*100+35} ${y*100+35}l30 30m0 -30l-30 30" stroke="white" stroke-width="8"/>`:''}`).join('')}</g>`;}
 function renderLesson(){
  if(!lessonState)return;
@@ -46,7 +36,7 @@ function renderLesson(){
  l.fruits.forEach(at=>svg+=lessonIcon(at,'assets/sprites/icon-16-3-2.png'));
  l.spikes.forEach(s=>{const active=covered.has(Pantori.key(s.lever));svg+=lessonIcon(s.at,active?'assets/spikes-retracted.png':'assets/tutorial-spikes.png');svg+=lessonIcon(s.lever,active?'assets/lever-left.png':'assets/tutorial-lever.png');});
  svg+=ps.map(p=>lessonTiles(p)).join('');
- l.ghosts.forEach(g=>svg+=lessonIcon(g.at,g.color==='red'?'assets/sprites/icon-16-1-3.png':'assets/sprites/icon-16-7-2.png',covered.has(Pantori.key(g.at))));
+ l.ghosts.forEach(g=>svg+=lessonIcon(g.at,({'red':'assets/sprites/icon-16-1-3.png','blue':'assets/sprites/icon-16-7-2.png','green':'assets/sprites/icon-17-1-0.png','yellow':'assets/sprites/icon-16-4-6.png'})[g.color],covered.has(Pantori.key(g.at))));
  l.diamonds.forEach(at=>svg+=lessonIcon(at,'assets/sprites/icon-17-6-2.png',covered.has(Pantori.key(at))));
  let error=null;
  if(lessonSelected&&lessonHover){const p=lessonProposal();error=Pantori.validPlacement(l,p,ps);svg+=lessonTiles(p,true,!!error);}

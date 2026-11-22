@@ -27,15 +27,11 @@ console.log('PASS: every translation key complete; all three levels auto-complet
 
 const guide=boot();assert(guide.elements.get('#rules').open);assert(guide.elements.get('#guideNext').disabled);
 guide.elements.get('#guideNext').onclick();assert.equal(guide.run('guideIndex'),0);
-const solutions=[
- [['redI',0,1]], [['redI',2,0]], [['redI',0,0],['blueL',1,1]],
- [['redI',0,0],['blueL',1,1]], [['redI',1,0],['blueL',2,1]],
- [['redI',0,0],['blueL',1,1]], [['redI',1,0],['blueL',2,1]], [['redI',0,2,'rotate']], [['blueS',0,0,'flip']]
-];
+const solutions=JSON.parse(fs.readFileSync('tutorial-solutions.json','utf8'));
 for(let i=0;i<solutions.length;i++){
  assert.equal(guide.run('guideIndex'),i);assert.equal(guide.run('lessonSolved()'),false);
- for(const [id,x,y,transform]of solutions[i]){
-  guide.run(`lessonChoose('${id}');${transform?`lessonShape=E.${transform}(lessonShape);`:''}lessonHover=[${x}+lessonShape[0][0],${y}+lessonShape[0][1]];lessonPlace()`);
+ for(const p of solutions[i]){
+  guide.run(`lessonChoose('${p.id}');lessonShape=${JSON.stringify(p.cells)};lessonHover=[${p.x}+lessonShape[0][0],${p.y}+lessonShape[0][1]];lessonPlace()`);
  }
  assert(guide.run('lessonSolved()'),`lesson ${i} not solvable`);
  assert.equal(guide.run('Object.keys(placements()).length'),0);
@@ -212,9 +208,9 @@ console.log('PASS: discard unplaced tile preserves board and undo history.');
 
 // Wrong ghost colour, partial diamonds and inactive spikes cannot complete a lesson.
 const badLessons=boot();
-badLessons.run("guideIndex=3;resetLesson();lessonChoose('blueL');lessonHover=[1,0];lessonPlace()");
+badLessons.run("guideIndex=5;resetLesson();lessonChoose('greenU');lessonHover=[3,2];lessonPlace()");
 assert.equal(badLessons.run('Object.keys(lessonState.ps).length'),0);assert(!badLessons.run('lessonSolved()'));
-badLessons.run("guideIndex=5;resetLesson();lessonChoose('redI');lessonHover=[0,0];lessonPlace()");assert(!badLessons.run('lessonSolved()'));assert(badLessons.elements.get('#guideNext').disabled);
+badLessons.run("guideIndex=7;resetLesson();lessonChoose('redT');lessonHover=[2,1];lessonPlace()");assert(!badLessons.run('lessonSolved()'));assert(badLessons.elements.get('#guideNext').disabled);
 badLessons.elements.get('#lessonReset').onclick();assert.equal(badLessons.run('Object.keys(lessonState.ps).length'),0);
 // Cancelled drag never commits; a second pointer does not steal the active gesture.
 const cancelDrag=boot(),ct=cancelDrag.elements.get('#tray');const rt={closest:()=>({dataset:{piece:'redI'}})};

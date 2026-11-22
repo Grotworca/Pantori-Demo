@@ -12,5 +12,8 @@ assert.equal(a.run('Object.keys(placements()).length'),0);
 a.elements.get('#guideNext').onclick();assert(!a.run('guideWelcome'));assert.equal(a.run('guideIndex'),0);assert(!a.elements.get('#lessonGrid').hidden);
 a.elements.get('#guidePrev').onclick();assert(a.run('guideWelcome'));
 // A valid mission with an uncovered ghost must pass the exercise as well.
-a.run("guideWelcome=false;guideIndex=3;resetLesson();lessonChoose('redI');lessonHover=[0,0];lessonPlace();lessonChoose('blueL');lessonHover=[2,1];lessonPlace()");assert(a.run('lessonSolved()'));assert(a.run("!new Set(Object.values(lessonState.ps).flatMap(E.cells).map(E.key)).has('4,3')"));
+const ghostSolution=JSON.parse(fs.readFileSync('tutorial-solutions.json','utf8'))[5];
+a.run(`guideWelcome=false;guideIndex=5;resetLesson();lessonState.ps=${JSON.stringify({})}`);
+for(const p of ghostSolution)a.run(`lessonState.ps['${p.id}']=${JSON.stringify(p)}`);
+assert(a.run('lessonSolved()'));assert(a.run("!new Set(Object.values(lessonState.ps).flatMap(E.cells).map(E.key)).has('4,0')"));
 console.log('PASS: welcome example, back/next, optional uncovered ghost.');
