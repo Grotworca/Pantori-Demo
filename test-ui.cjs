@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 function boot(start=true){const elements=new Map(),storageCalls=[];
- const element=()=>({dataset:{},getBoundingClientRect:()=>({left:0,top:0,width:800,height:800}),setPointerCapture(){},releasePointerCapture(){},hasPointerCapture(){return true},innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},children:[],append(child){this.children.push(child)},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
+ const element=()=>({style:{},dataset:{},getBoundingClientRect:()=>({left:0,top:0,width:800,height:800}),setPointerCapture(){},releasePointerCapture(){},hasPointerCapture(){return true},innerHTML:'',textContent:'',disabled:false,open:false,classList:{toggle(){}},setAttribute(){},children:[],append(child){this.children.push(child)},scrollIntoView(){},showModal(){this.open=true},close(){this.open=false},addEventListener(){},focus(){}});
  const document={documentElement:{setAttribute(){}},querySelectorAll(){return []},querySelector(s){if(s==='dialog[open]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)},createElement:element,addEventListener(){}};
  const context={document,requestAnimationFrame:fn=>{fn();return 0},matchMedia:()=>({matches:false}),localStorage:{getItem(){throw Error('Old progress must not be read')},setItem(){throw Error('Progress must not be persisted')},removeItem(k){storageCalls.push(k)}},console};context.window=context;vm.createContext(context);
  for(const f of ['levels.js','engine.js','i18n.js','effects.js','icon-sprites.js','interaction-i18n.js','piece-drag.js','tutorial.js','app.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
@@ -221,3 +221,16 @@ ct.onpointercancel(ev(150,550,'touch',rt));assert(!cancelDrag.run('gameDrag.acti
 const small=boot(),sb=small.elements.get('#board');small.elements.get('#grid').getBoundingClientRect=()=>({left:10,top:20,width:320,height:320});
 small.run("touchMode=true;choose('redI');hover=[1,5]");sb.onpointerdown(ev(70,280));sb.onpointermove(ev(91,280));assert(Math.abs(small.run('floating[0]')-1.525)<.001);sb.onpointerup(ev(91,280));assert.equal(small.run('placements().redI.x'),2);assert.equal(small.run('placements().redI.y'),5);
 console.log('PASS: negative tutorial cases, retry, pointer cancellation, second-pointer isolation, 320px board grip and release.');
+
+// Active spikes block both preview and drop; covering their lever unlocks them.
+const spikeGate=boot();spikeGate.run("guideIndex=6;guideWelcome=false;resetLesson();lessonChoose('blueL');lessonHover=[2,2];lessonPlace()");
+assert.equal(spikeGate.run('Object.keys(lessonState.ps).length'),0);assert(spikeGate.elements.get('#lessonArt').innerHTML.includes('invalid-preview'));assert(spikeGate.elements.get('#lessonFeedback').textContent.includes('Najpierw'));
+spikeGate.run("lessonChoose('yellowI');lessonHover=[0,0];lessonPlace();lessonChoose('blueL');lessonHover=[2,2];lessonPlace()");assert(spikeGate.run('lessonSolved()'));
+for(const index of [0,2]){
+ spikeGate.run(`state.index=${index};render();const trap${index}=level().spikes[0];const tile${index}={id:'probe',color:'red',cells:[[0,0]],x:trap${index}.at[0],y:trap${index}.at[1]};const lever${index}={id:'lever',color:'yellow',cells:[[0,0]],x:trap${index}.lever[0],y:trap${index}.lever[1]};`);
+ assert(spikeGate.run(`E.validPlacement(level(),tile${index},[])`).includes('Najpierw'));
+ assert.equal(spikeGate.run(`E.validPlacement(level(),tile${index},[lever${index}])`),null);
+}
+// Extra bottom row: fruit is covered at rows 2..4, but row 5 separates the piece from the edge.
+spikeGate.run("guideIndex=1;resetLesson();lessonChoose('redI');lessonHover=[2,2];lessonPlace()");assert.equal(spikeGate.run('lesson().height'),6);assert.equal(spikeGate.run('E.check(lesson(),lessonState.ps).fruit'),1);assert(!spikeGate.run('lessonSolved()'));assert(!spikeGate.elements.get('#edgeExample').hidden);
+console.log('PASS: active spikes blocked in tutorial and maps 16/18, lever unlocks them; 5x6 entrance puzzle permits intended error.');

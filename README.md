@@ -114,3 +114,5 @@ Samouczek zaczyna się ekranem powitalnym z poprawną trasą na osobnej planszy.
 Wersja 3: nowe układy i zestawy klocków w ćwiczeniach, przeredagowane teksty w sześciu językach oraz poprawione skalowanie wycinka grafiki kolców. Obrót i odbicie poprzedzają pozostałe mechaniki; diamenty zamykają samouczek.
 
 Wersja 4: zadanie 2 pozwala zebrać owoc bez dojścia do krawędzi i wyświetla błąd; zadanie 5 pokazuje dwa graficzne przykłady błędnego styku. Zadanie 8 wymusza zebranie diamentów samym układem mapy. Zadanie 9 to dawny układ 8, dopuszczający zarówno 0, jak i wszystkie diamenty. Testy enumerują wszystkie rozwiązania i sprawdzają obie możliwości.
+
+Wersja 5: nowy wstęp i krótsze opisy, przykład wejścia do lochu i plansza 5×6. Aktywne kolce blokują położenie klocka w samouczku i grze: najpierw trzeba zakryć dźwignię innym klockiem. Oba ostatnie ćwiczenia mają tytuł Diamenty.

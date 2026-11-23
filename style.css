@@ -64,3 +64,5 @@ footer{justify-content:center}footer>span:empty{display:none}
 @media(prefers-reduced-motion:reduce){.invalid-preview{animation:none;opacity:.7}}
 
 #contactExamples{display:flex;gap:12px;margin:10px 0}#contactExamples figure{flex:1;margin:0;padding:8px;border:2px solid #b94753;border-radius:12px;background:#fff1ed;text-align:center}#contactExamples svg{height:125px;max-width:100%;display:block;margin:auto}#contactExamples figcaption{font-size:12px;line-height:1.4;font-weight:700;color:#842b38}
+
+#edgeExample{display:flex;align-items:center;gap:16px;background:#eef5dd;border:2px solid #6a8d4d;border-radius:12px;padding:10px;margin:10px 0}#edgeExample svg{width:110px;height:105px;flex-shrink:0}#edgeExample p{font-size:13px;line-height:1.4;margin:0}

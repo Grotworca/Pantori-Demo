@@ -5,15 +5,16 @@ const rotate=c=>normalize(c.map(([x,y])=>[-y,x]));
 const flip=c=>normalize(c.map(([x,y])=>[-x,y]));
 const cells=p=>p.cells.map(([x,y])=>[x+p.x,y+p.y]);
 const contacts=(a,b)=>cells(a).reduce((n,[x,y])=>n+cells(b).filter(([u,v])=>Math.abs(x-u)+Math.abs(y-v)===1).length,0);
-function validPlacement(level,p,others){
+function validPlacement(level,p,others,options={}){
  const wall=new Set(level.walls.map(key)),used=new Set(others.flatMap(cells).map(key));
  for(const c of cells(p)){
- if(c.some(v=>v<0||v>=level.size))return 'Klocek wystaje poza planszę.';
+ if(c[0]<0||c[0]>=(level.width||level.size)||c[1]<0||c[1]>=(level.height||level.size))return 'Klocek wystaje poza planszę.';
  if(wall.has(key(c)))return 'Mur musi pozostać odkryty.';
  if(used.has(key(c)))return 'Klocki nie mogą na siebie nachodzić.';
  const g=level.ghosts.find(g=>key(g.at)===key(c));
  if(g&&g.color!==p.color)return 'Ducha może zakryć tylko klocek w jego kolorze.';
  }
+ if(!options.ignoreSpikes&&(level.spikes||[]).some(s=>cells(p).some(c=>key(c)===key(s.at))&&!used.has(key(s.lever))))return 'Najpierw zakryj dźwignię połączoną z tymi kolcami.';
  if(others.some(q=>contacts(p,q)>1))return 'Dwa klocki mogą stykać się tylko jednym wspólnym bokiem.';
  // Inspect every segment, including segments of pieces already on the board.
  const all=[...others,p],owner=new Map();
@@ -27,7 +28,7 @@ function validPlacement(level,p,others){
 function check(level,placements){
  const ps=Object.values(placements),covered=new Set(ps.flatMap(cells).map(key)),errors=[];
  if(ps.length!==level.pieces.length||level.pieces.some(id=>!placements[id]))errors.push('Użyj wszystkich wskazanych klocków.');
- for(const p of ps){let e=validPlacement(level,p,ps.filter(q=>q!==p));if(e&&!errors.includes(e))errors.push(e);}
+ for(const p of ps){let e=validPlacement(level,p,ps.filter(q=>q!==p),{ignoreSpikes:true});if(e&&!errors.includes(e))errors.push(e);}
  const fruit=level.fruits.filter(c=>covered.has(key(c))).length;
  if(fruit<level.fruits.length)errors.push('Zakryj wszystkie owoce.');
  const d=level.diamonds.filter(c=>covered.has(key(c))).length;
@@ -36,7 +37,7 @@ function check(level,placements){
  let multiple=false;for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++)if(contacts(ps[i],ps[j])>1)multiple=true;
  if(multiple)errors.push('Dwa klocki mogą stykać się tylko jednym wspólnym bokiem.');
  if(ps.length){let seen=new Set([0]),todo=[0];while(todo.length){let i=todo.pop();ps.forEach((p,j)=>{if(!seen.has(j)&&contacts(ps[i],p)>0){seen.add(j);todo.push(j);}});}if(seen.size!==ps.length)errors.push('Połącz wszystkie klocki bokami w jedną drogę.');}
- if(!ps.some(p=>cells(p).some(([x,y])=>x===0||y===0||x===level.size-1||y===level.size-1)))errors.push('Droga musi dochodzić do krawędzi planszy.');
+ if(!ps.some(p=>cells(p).some(([x,y])=>x===0||y===0||x===(level.width||level.size)-1||y===(level.height||level.size)-1)))errors.push('Droga musi dochodzić do krawędzi planszy.');
  return {ok:errors.length===0,errors,fruit};
 }
 root.Pantori={normalize,rotate,flip,cells,contacts,validPlacement,check,key};

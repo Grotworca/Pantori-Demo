@@ -2,7 +2,7 @@
 // Pointer capture belongs to stable containers, never to a tray button that is rebuilt.
 function installPieceDrag(o){
  let gesture=null;
- const point=e=>{const r=o.surface.getBoundingClientRect(),n=o.size();return [(e.clientX-r.left)/r.width*n-.5,(e.clientY-r.top)/r.height*n-.5]};
+ const point=e=>{const r=o.surface.getBoundingClientRect(),n=o.size(),dims=Array.isArray(n)?n:[n,n];return [(e.clientX-r.left)/r.width*dims[0]-.5,(e.clientY-r.top)/r.height*dims[1]-.5]};
  const inside=e=>{const r=o.surface.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<r.left+r.width&&e.clientY>=r.top&&e.clientY<r.top+r.height};
  function move(e){
   if(!gesture||gesture.id!==e.pointerId)return;
