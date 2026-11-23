@@ -1,3 +1,14 @@
+## Aktualizacja samouczka v6
+
+- Krótszy podpis na ekranie powitalnym, bez powtórzenia powitania.
+- Przykład wejścia z klockiem pośrodku szerokości planszy i strzałką przy górnej krawędzi.
+- Pulsujące przyciski obrotu, odbicia i rozpoczęcia gry po ostatnim zadaniu.
+- Wcześniejsze ładowanie grafik pułapki i dźwigni, brak kropek na polu kolców.
+- Poprawione opisy diamentów we wszystkich sześciu językach.
+- CNAME zachowuje adres pantoridemo.hammerdice.com.
+
+Wgraj zawartość paczki do dotychczasowego repozytorium, nadpisując pliki o tych samych nazwach.
+
 # Pantori - demo webowe
 
 Trzy plansze 16 → 17 → 18, interfejs PL/EN/DE/FR/ES/IT, obsługa myszy, dotyku i klawiatury. Gra działa bez backendu, kont, bibliotek zewnętrznych i instalacji. Używa grafik dostarczonych przez autora oraz zasad instrukcji Pantori. Nie zawiera kart nagród, punktów ani akcji specjalnych.

@@ -25,3 +25,20 @@ a.run('guideIndex=4;resetLesson()');assert(!a.elements.get('#contactExamples').h
 assert.equal(a.run("E.contacts({cells:[[0,0],[0,1],[0,2]],x:0,y:0},{cells:[[0,0],[1,0],[0,1]],x:1,y:0})"),2);
 assert.equal(a.run("E.contacts({cells:[[0,0],[0,1],[0,2]],x:0,y:0},{cells:[[0,0],[1,0],[0,1]],x:1,y:3})"),0);
 console.log('PASS: edge error can be placed and corrected; contact diagrams; diamonds forced by map 8, optional on map 9.');
+
+// Lesson cues follow the active exercise and completion state.
+a.run("guideIndex=2;resetLesson()");assert(a.elements.get('#lessonRotate').classList.contains('tutorial-cue'));assert(!a.elements.get('#lessonFlip').classList.contains('tutorial-cue'));
+a.run("guideIndex=3;resetLesson()");assert(a.elements.get('#lessonFlip').classList.contains('tutorial-cue'));assert(!a.elements.get('#lessonRotate').classList.contains('tutorial-cue'));
+a.run("guideIndex=6;resetLesson();lessonChoose('yellowI');lessonHover=[0,0];lessonPlace()");
+assert(a.elements.get('#lessonArt').innerHTML.includes('href="#tutorial-retracted-icon"'));
+assert(a.elements.get('#lessonArt').innerHTML.includes('mask="url(#lesson-link-mask)"'));
+a.run("lessonChoose('yellowI')");assert(!a.elements.get('#lessonArt').innerHTML.includes('href="#tutorial-retracted-icon"'));
+a.run("guideIndex=7;resetLesson()");assert(a.elements.get('#lessonFeedback').textContent.includes('Nie możesz zebrać tylko części'));
+assert(a.elements.get('#guideDescription').children.some(n=>n.textContent==='Nie musisz zbierać diamentów. '));
+a.run("guideIndex=8;resetLesson()");assert(!a.elements.get('#guideExit').classList.contains('tutorial-cue'));
+const finalSolution=JSON.parse(fs.readFileSync('tutorial-solutions.json','utf8'))[8];
+a.run(`lessonState.ps=${JSON.stringify(Object.fromEntries(finalSolution.map(p=>[p.id,p])))};renderGuide()`);
+assert(a.elements.get('#guideExit').classList.contains('tutorial-cue'));
+a.run('openGuide(true)');assert(!a.elements.get('#guideExit').classList.contains('tutorial-cue'));
+assert.equal(a.elements.get('#lessonFeedback').textContent,'Ułóż trasę z klocków, zakrywając wszystkie owoce.');
+console.log('PASS: exercise cues, instant trap switch and reversal, diamond captions, final start cue.');

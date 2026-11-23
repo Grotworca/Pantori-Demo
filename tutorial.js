@@ -29,10 +29,11 @@ function renderLesson(){
  const l=lesson(),ps=lessonVisible(),covered=new Set(ps.flatMap(Pantori.cells).map(Pantori.key));
  let svg='';for(let y=0;y<(l.height||l.size);y++)for(let x=0;x<(l.width||l.size);x++)svg+=`<rect x="${x*100+2}" y="${y*100+2}" width="96" height="96" rx="7" fill="#fffdf4" stroke="#272331" stroke-width="4"/>`;
  l.walls.forEach(([x,y])=>{svg+=`<g data-wall="${x},${y}"><rect x="${x*100+4}" y="${y*100+4}" width="92" height="92" rx="5" fill="#6376c7"/><path d="M${x*100+4} ${y*100+34}h92m-92 32h92M${x*100+50} ${y*100+4}v30m-23 0v32m46 -32v32m-23 0v30" fill="none" stroke="#e7edff" stroke-width="4"/></g>`;});
- l.spikes.forEach(s=>{svg+=`<path data-lever-link="true" d="M${s.lever[0]*100+50} ${s.lever[1]*100+50}V${s.at[1]*100+50}H${s.at[0]*100+50}" fill="none" stroke="#302c40" stroke-width="7" stroke-dasharray="1 17" stroke-linecap="round"/>`;});
+ if(l.spikes.length)svg+=`<defs><mask id="lesson-link-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${(l.width||l.size)*100}" height="${(l.height||l.size)*100}"><rect width="100%" height="100%" fill="white"/>${l.spikes.map(s=>`<rect x="${s.at[0]*100}" y="${s.at[1]*100}" width="100" height="100" fill="black"/>`).join('')}</mask></defs>`;
+ l.spikes.forEach(s=>{svg+=`<path mask="url(#lesson-link-mask)" data-lever-link="true" d="M${s.lever[0]*100+50} ${s.lever[1]*100+50}V${s.at[1]*100+50}H${s.at[0]*100+50}" fill="none" stroke="#302c40" stroke-width="7" stroke-dasharray="1 17" stroke-linecap="round"/>`;});
  if(l.target)svg+=l.target.map(([x,y])=>`<rect x="${x*100+10}" y="${y*100+10}" width="80" height="80" rx="6" fill="#dce4ff" stroke="#516fc7" stroke-dasharray="7 6" stroke-width="3"/>`).join('');
  l.fruits.forEach(at=>svg+=lessonIcon(at,'assets/sprites/icon-16-3-2.png'));
- l.spikes.forEach(s=>{const active=covered.has(Pantori.key(s.lever));svg+=lessonIcon(s.at,active?'assets/spikes-retracted.png':'assets/tutorial-spikes.png');svg+=lessonIcon(s.lever,active?'assets/lever-left.png':'assets/tutorial-lever.png');});
+ l.spikes.forEach(s=>{const active=covered.has(Pantori.key(s.lever));svg+=active?`<use href="#tutorial-retracted-icon" x="${s.at[0]*100+16}" y="${s.at[1]*100+16}" width="68" height="68"/>`:lessonIcon(s.at,'assets/tutorial-spikes.png');svg+=active?`<use href="#tutorial-lever-left-icon" x="${s.lever[0]*100+16}" y="${s.lever[1]*100+16}" width="68" height="68"/>`:lessonIcon(s.lever,'assets/tutorial-lever.png');});
  svg+=ps.map(p=>lessonTiles(p)).join('');
  l.ghosts.forEach(g=>svg+=lessonIcon(g.at,({'red':'assets/sprites/icon-16-1-3.png','blue':'assets/sprites/icon-16-7-2.png','green':'assets/sprites/icon-17-1-0.png','yellow':'assets/sprites/icon-16-4-6.png'})[g.color],covered.has(Pantori.key(g.at))));
  l.diamonds.forEach(at=>svg+=lessonIcon(at,'assets/sprites/icon-17-6-2.png',covered.has(Pantori.key(at))));
@@ -42,8 +43,11 @@ function renderLesson(){
  document.querySelector('#lessonBoard').classList.toggle('piece-selected',!!lessonSelected);
  const solved=lessonSolved();
  if(!error&&!lessonSelected&&!solved&&ps.length===l.pieces.length)error=Pantori.check(l,lessonState.ps).errors[0]||null;
- document.querySelector('#lessonFeedback').textContent=error?translateError(error):t(guideWelcome?'welcomeExample':solved?'lessonSuccess':'lessonTry');
- document.querySelector('#lessonFeedback').classList.toggle('solved',solved);
+ document.querySelector('#lessonFeedback').textContent=error?translateError(error):t(guideWelcome?'welcomeExample':solved?'lessonSuccess':['diamonds','diamondsNone'].includes(l.key)?'diamondRule':'lessonTry');
+ document.querySelector('#lessonFeedback').classList.toggle('solved',solved&&!guideWelcome);
+ document.querySelector('#lessonRotate').classList.toggle('tutorial-cue',!guideWelcome&&l.key==='rotate'&&!solved);
+ document.querySelector('#lessonFlip').classList.toggle('tutorial-cue',!guideWelcome&&l.key==='flip'&&!solved);
+ document.querySelector('#guideExit').classList.toggle('tutorial-cue',!guideWelcome&&guideIndex===lessons.length-1&&solved);
  document.querySelector('#guideNext').disabled=!solved||guideIndex===lessons.length-1;
  document.querySelector('#lessonRotate').disabled=document.querySelector('#lessonFlip').disabled=!lessonSelected;
 }
@@ -53,6 +57,7 @@ function renderGuide(){
  for(const id of ['#lessonGrid','#lessonTray','#lessonTools','#lessonFeedback'])$(id).hidden=guideWelcome&&id!=='#lessonFeedback';
  renderContactExamples(!guideWelcome&&l.key==='contact');renderEdgeExample(!guideWelcome&&l.key==='edge');
  $('#guideTitle').textContent=t(guideWelcome?'welcomeTitle':'lessonTitle_'+l.key);$('#guideDescription').textContent=t(guideWelcome?'welcomeText':'lesson_'+l.key);
+ if(!guideWelcome&&l.key==='diamonds'){const note=document.createElement('strong');note.textContent=t('diamondOptional')+'. ';$('#guideDescription').textContent='';$('#guideDescription').append(note,document.createTextNode(t('lesson_diamonds')));}
  if(!guideWelcome&&l.key==='ghost'){const note=document.createElement('strong');note.textContent=t('ghostOptional');$('#guideDescription').append(document.createElement('br'),note);}
  $('#guidePrev').textContent='← '+t('guidePrev');$('#guidePrev').disabled=guideWelcome;
  $('#guideNext').textContent=t('guideNext')+' →';$('#guideExit').textContent=t(guideStartup?'startGame':'backGame');
@@ -87,6 +92,6 @@ function renderContactExamples(show){
 }
 
 function renderEdgeExample(show){const host=document.querySelector('#edgeExample');host.hidden=!show;if(!show)return;
- const p={id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:0,y:0};
- host.innerHTML=`<svg viewBox="-60 -15 380 330" role="img" aria-label="${t('edgeExample')}"><rect x="0" y="0" width="300" height="300" rx="8" fill="#fffdf4" stroke="#292237" stroke-width="6"/>${lessonTiles(p)}<path d="M-50 50H-8m-15 -14l15 14-15 14" fill="none" stroke="#36773e" stroke-width="9" stroke-linecap="round"/></svg><p>${t('edgeExample')}</p>`;
+ const p={id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:2,y:0};
+ host.innerHTML=`<svg viewBox="-15 -85 530 500" role="img" aria-label="${t('edgeExample')}"><rect x="0" y="0" width="500" height="400" rx="8" fill="#fffdf4" stroke="#292237" stroke-width="6"/>${lessonTiles(p)}<path d="M250 -65V-6m-15 -18l15 18 15-18" fill="none" stroke="#36773e" stroke-width="9" stroke-linecap="round"/><path d="M205 3h90" stroke="#36773e" stroke-width="8"/></svg><p>${t('edgeExample')}</p>`;
 }
