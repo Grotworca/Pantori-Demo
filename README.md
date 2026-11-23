@@ -1,3 +1,7 @@
+## Poprawka v7: stykanie klocków
+
+Każda para klocków może stykać się najwyżej jedną ścianką. Jeden segment może dotykać różnych klocków, jeżeli każda para spełnia ten warunek. Układ ze zgłoszonego zrzutu mapy 16 został objęty testem i jest zaliczany.
+
 ## Aktualizacja samouczka v6
 
 - Krótszy podpis na ekranie powitalnym, bez powtórzenia powitania.

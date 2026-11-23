@@ -16,13 +16,6 @@ function validPlacement(level,p,others,options={}){
  }
  if(!options.ignoreSpikes&&(level.spikes||[]).some(s=>cells(p).some(c=>key(c)===key(s.at))&&!used.has(key(s.lever))))return 'Najpierw zakryj dźwignię połączoną z tymi kolcami.';
  if(others.some(q=>contacts(p,q)>1))return 'Dwa klocki mogą stykać się tylko jednym wspólnym bokiem.';
- // Inspect every segment, including segments of pieces already on the board.
- const all=[...others,p],owner=new Map();
- all.forEach((piece,i)=>cells(piece).forEach(c=>owner.set(key(c),i)));
- for(let i=0;i<all.length;i++)for(const [x,y] of cells(all[i])){
-  const neighbors=new Set([[x-1,y],[x+1,y],[x,y-1],[x,y+1]].map(c=>owner.get(key(c))).filter(j=>j!==undefined&&j!==i));
-  if(neighbors.size>1)return 'Jeden segment nie może dotykać bokami więcej niż jednego innego klocka.';
- }
  return null;
 }
 function check(level,placements){

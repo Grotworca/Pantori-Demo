@@ -95,11 +95,11 @@ assert.equal(legality.elements.get('#feedback').hidden,false);
 legality.run('hover=[1,4];drawPreview()');assert.equal(legality.elements.get('#feedback').hidden,true);
 legality.run('place(1,4)');assert.equal(legality.elements.get('#feedback').hidden,true);
 legality.run("const emptyMap={size:8,walls:[],ghosts:[]};const unit=(id,x,y)=>({id,color:'red',cells:[[0,0]],x,y});");
-assert(legality.run("E.validPlacement(emptyMap,unit('c',2,2),[unit('a',1,2),unit('b',3,2)])"));
-assert(legality.run("E.validPlacement(emptyMap,unit('c',3,2),[unit('a',2,2),unit('b',1,2)])"));
+assert.equal(legality.run("E.validPlacement(emptyMap,unit('c',2,2),[unit('a',1,2),unit('b',3,2)])"),null);
+assert.equal(legality.run("E.validPlacement(emptyMap,unit('c',3,2),[unit('a',2,2),unit('b',1,2)])"),null);
 assert.equal(legality.run("E.validPlacement(emptyMap,unit('c',2,2),[unit('a',1,1),unit('b',3,3)])"),null);
 assert.equal(legality.run("E.validPlacement(emptyMap,{id:'c',color:'red',cells:[[0,0],[1,0],[2,0]],x:2,y:2},[unit('a',1,2),unit('b',5,2)])"),null);
-console.log('PASS: gray hatching preserves tile color; preview explains invalid placement; routine messages hidden; segment contact checked for new and existing pieces; corner and separate-segment contacts allowed.');
+console.log('PASS: gray hatching preserves tile color; preview explains invalid placement; routine messages hidden; one contact per pair, including a segment touching two different pieces; corner and separate-segment contacts allowed.');
 
 const contactFix=boot();contactFix.run("level().walls=[];level().ghosts=[];choose('redI');place(2,3);choose('yellowI');hover=[1,3];drawPreview()");
 assert(contactFix.elements.get('#previewLayer').innerHTML.includes('url(#invalidHatch)'));
@@ -234,3 +234,17 @@ for(const index of [0,2]){
 // Extra bottom row: fruit is covered at rows 2..4, but row 5 separates the piece from the edge.
 spikeGate.run("guideIndex=1;resetLesson();lessonChoose('redI');lessonHover=[2,2];lessonPlace()");assert.equal(spikeGate.run('lesson().height'),6);assert.equal(spikeGate.run('E.check(lesson(),lessonState.ps).fruit'),1);assert(!spikeGate.run('lessonSolved()'));assert(!spikeGate.elements.get('#edgeExample').hidden);
 console.log('PASS: active spikes blocked in tutorial and maps 16/18, lever unlocks them; 5x6 entrance puzzle permits intended error.');
+
+// Exact map-16 layout reported in the mobile screenshot.
+const reported=boot();
+reported.run(`state.boards[level().id]={
+ redT:{id:'redT',color:'red',cells:[[2,0],[0,1],[1,1],[2,1],[2,2]],x:1,y:2},
+ redI:{id:'redI',color:'red',cells:[[0,0],[0,1],[0,2]],x:1,y:4},
+ blueS:{id:'blueS',color:'blue',cells:[[0,0],[0,1],[1,1],[2,1],[2,2]],x:5,y:3}
+};choose('yellowI');hover=[4,4];drawPreview()`);
+assert(!reported.elements.get('#previewLayer').innerHTML.includes('invalid-preview'));
+reported.run('place(4,4)');assert.equal(reported.run('selected'),null);
+assert.equal(reported.run('Object.keys(placements()).length'),4);
+assert(reported.run('E.check(level(),placements()).ok'));
+assert(reported.elements.get('#win').open);
+console.log('PASS: exact mobile screenshot accepts yellow piece and completes map 16.');
